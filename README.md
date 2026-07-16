@@ -91,11 +91,29 @@ sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
     participant KB as 教訓知識庫
+    participant Arch as 架構師 (Architect)
+    participant DQA as 品管 (TDD/SDD)
+    
     CEO->>PM: 提出商業需求 (Feature Request)
-    PM->>KB: 讀取過去類似專案的失敗教訓
-    PM->>PM: 撰寫 PRD (產品需求規格)
-    PM->>CEO: 提交方案單選題 (A/B/C)
-    CEO-->>PM: /approve 選擇並放行
+    PM->>KB: 讀取 DIGEST (知識繼承)
+    PM->>PM: 撰寫全局 PRD 草案與推薦 LLM 陣容
+    PM->>Arch: 請求架構審查與繪製系統流程圖
+    Arch->>PM: 產出 ADRs 與架構藍圖
+    PM->>DQA: 請求 DQA 前置審查 (Pre-Audit)
+    DQA->>DQA: 技術可行性審查與極端邊界規劃
+    DQA->>PM: 回報審查報告
+    
+    PM->>CEO: 提交 PRD、架構圖、與模型推薦矩陣
+    Note right of PM: 🛑 強烈建議 CEO 使用 /grill-me 進行盤問
+    
+    opt 最終盤問 (Grill-Me)
+        CEO->>PM: 執行 /grill-me (壓力測試與釐清)
+        PM->>CEO: 解答疑慮並微調計畫
+    end
+    
+    CEO-->>PM: /approve 簽核放行
+    PM->>PM: 注入全局基因 (Rule Auto-loading)
+    PM->>PM: 執行 phase_gate_hook.py 進入 Phase 1
 ```
 </details>
 

@@ -104,35 +104,55 @@ sequenceDiagram
 </details>
 
 <details>
-<summary><b>Phase 1: 架構設計 (點擊展開)</b></summary>
+<summary><b>Phase 1: 架構設計與微觀規劃 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
     participant Arch as 架構師 (Architect)
     participant CEO
-    PM->>Arch: 交付 PRD
-    Arch->>Arch: 進行技術選型與系統設計
+    
+    PM->>PM: 鎖定當前 Milestone 並撰寫細部 PRD
+    PM->>Arch: 交付 Milestone PRD 請求微觀架構設計
+    Arch->>Arch: 設計資料結構、API 規格與元件樹
     Arch->>PM: 產出 System Architecture
-    PM->>CEO: 回報架構藍圖與潛在風險
-    CEO-->>PM: /approve 授權進入開發
+    PM->>PM: 在 PRD 底部加入授權簽核區塊
+    PM->>CEO: 報告細部規劃與潛在風險，請求授權
+    CEO-->>PM: /approve 簽核
+    PM->>PM: 執行 phase_gate_hook.py 驗證跳轉
 ```
 </details>
 
 <details>
-<summary><b>Phase 2: 測試驅動開發 (點擊展開)</b></summary>
+<summary><b>Phase 2: DQA 進場與邊界規劃 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
-    participant DQA as 品管 (TDD/SDD)
+    participant Arch as 架構師
+    participant SDD as SDD DQA (文科)
+    participant TDD as TDD DQA (理科)
     participant CEO
-    PM->>DQA: 交付 PRD 與架構圖
-    DQA->>DQA: 撰寫 TDD 測試單元 (看邏輯)
-    DQA->>DQA: 撰寫 SDD 測試腳本 (看體驗)
-    DQA->>PM: 產出驗收標準與測試工具
-    PM->>CEO: 請求授權開始實作
-    CEO-->>PM: /approve 放行
+    
+    PM->>SDD: 交付 Milestone PRD 與開發邊界
+    SDD->>SDD: 規格守門 (規格模糊則發動退件權)
+    SDD-->>PM: 規格合格，簽核同意
+    
+    PM->>TDD: 交付架構藍圖
+    par 測試策略與工具準備 (繼承知識庫)
+        TDD->>TDD: 產出極端邊界測試計畫與 Mock Data
+        SDD->>SDD: 產出體驗與邏輯驗證計畫
+    end
+    TDD-->>PM: 提交自動化測試工具
+    SDD-->>PM: 提交自動化測試工具
+    PM->>PM: 行使否決權審核測試邊界 (防越界)
+    
+    PM->>Arch: 共同擬定 org_security_policy.json (防爆政策)
+    Arch-->>PM: 實體安全護欄建立完畢
+    
+    PM->>CEO: 測試防線與安全防護就緒，請求放行
+    CEO-->>PM: /approve 簽核
+    PM->>PM: 執行 phase_gate_hook.py 進入開發階段
 ```
 </details>
 

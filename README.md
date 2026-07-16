@@ -20,6 +20,55 @@
 
 ---
 
+## 🗺️ Vibe Coding 工作流程圖 (Workflow)
+
+```mermaid
+graph TD
+    %% 角色定義
+    CEO((CEO / 您))
+    PM[專案經理 PM]
+    ARCH[架構師 Architect]
+    DQA[品管 DQA]
+    ENG[工程師 Engineer]
+    TE[測試工程師 TE]
+
+    %% 流程
+    CEO -- "下達商業需求" --> Phase0
+    
+    subgraph "Phase 0: 戰略定義"
+        Phase0[產出 PRD 規格書] -.-> PM
+    end
+    Phase0 -- "需 CEO /approve 放行" --> Phase1
+    
+    subgraph "Phase 1: 架構設計"
+        Phase1[產出系統架構與技術選型] -.-> ARCH
+    end
+    Phase1 -- "需 CEO /approve 放行" --> Phase2
+    
+    subgraph "Phase 2: 測試驅動開發"
+        Phase2[撰寫 TDD/SDD 測試與驗收標準] -.-> DQA
+    end
+    Phase2 -- "需 CEO /approve 放行" --> Phase3
+    
+    subgraph "Phase 3: 實作與封裝 (物理沙盒)"
+        Phase3[在 src/ 進行開發 (無 Commit 權限)] -.-> ENG
+    end
+    Phase3 --> Phase4
+    
+    subgraph "Phase 4: 驗收與教訓總結"
+        Phase4[執行測試與紀錄 lessons_learned] -.-> TE
+        Phase4 -.-> DQA
+    end
+    
+    Phase4 -- "需 CEO /approve 發布" --> Release((正式上線))
+    
+    %% 樣式
+    classDef phase fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    class Phase0,Phase1,Phase2,Phase3,Phase4 phase;
+```
+
+---
+
 ## 🌟 核心特色 (Core Features)
 
 ### 1. 🛡️ 鐵律與物理防爆沙盒 (Physical Guardrails)

@@ -142,19 +142,39 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
-    participant Claude as Claude 外包部隊
+    participant ENG as 工程師 (Engineer)
     participant Guard as 物理防爆沙盒
-    PM->>Claude: 發包實作任務
+    participant TDD as TDD DQA (理科)
+    participant SDD as SDD DQA (文科)
+    participant CDQA as Claude DQA (外部審查)
+    
+    PM->>ENG: 發包實作任務
     loop 寫扣與自我修正
-        Claude->>Guard: 嘗試寫入代碼
-        alt 寫在 src/ 內
-            Guard-->>Claude: 允許寫入
-        else 寫在 src/ 外 或 執行 git commit
-            Guard-->>Claude: 🛑 攔截並紀錄 Log
+        ENG->>Guard: 嘗試寫入代碼 (src/)
+        Guard-->>ENG: 攔截越權或允許寫入
+    end
+    ENG->>PM: 提交交接報告
+    
+    rect rgb(240, 248, 255)
+        note right of PM: 🛡️ 三重品管防線 (DQA Pipeline)
+        PM->>TDD: 請求 TDD 審核 (Docker 沙盒測試)
+        alt 測試失敗
+            TDD-->>ENG: 亮紅燈，退回要求 RCA 與重寫
+        else TDD 通過
+            PM->>SDD: 請求 SDD 審核 (UI 與商業邏輯)
+            alt 規格不符或破版
+                SDD-->>ENG: 亮紅燈，退回要求重寫
+            else SDD 通過
+                PM->>CDQA: 呼叫外部 Claude CLI 最終抓漏
+                alt 外部審查失敗
+                    CDQA-->>ENG: 亮紅燈，退回要求重寫
+                else 全數通過
+                    CDQA-->>PM: 🟢 All Clear
+                    PM->>PM: 進入 Phase 4 或下個 Milestone
+                end
+            end
         end
     end
-    Claude->>PM: 提交交接報告
-    PM->>PM: 自動進入 Phase 4
 ```
 </details>
 
@@ -164,16 +184,29 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
-    participant TE as 測試工程師 (TE)
-    participant DQA as 品管審查
+    participant DQA as 品管 (大腦清洗後)
+    participant Arch as 架構師 (Architect)
     participant CEO
-    PM->>TE: 指派執行 Phase 2 寫好的測試
-    TE->>TE: 零寫入權限執行驗證
-    TE->>DQA: 提交測試結果
-    DQA->>PM: 總結此次失敗經驗，轉化為 SOP
-    PM->>PM: 更新 lessons_learned.md
-    PM->>CEO: 提交結案報告
-    CEO-->>PM: /approve 發布上線
+    
+    PM->>DQA: 發動全局整合測試與套件收斂
+    DQA->>DQA: 驗證跨模組整合 Bug
+    DQA->>PM: 測試通過 (Green Light)
+    
+    PM->>Arch: 喚醒架構師進行最終覆核
+    Arch->>Arch: 盤點架構偏移與依賴膨脹
+    Arch->>PM: 產出 Final_Architecture_Audit.md
+    
+    Note over PM,Arch: 必須達成全票同意 (All-Agree) 才能推進
+    
+    PM->>CEO: 交付執行檔 / 網站連結進行「實機盲測」
+    alt CEO 發現致命錯誤
+        CEO-->>PM: 退回
+        PM->>PM: 呼叫 Log Agent 紀錄退件，退回 Phase 3 重新 DQA
+    else CEO 盲測無誤
+        CEO-->>PM: /approve 簽核放行
+        PM->>PM: 呼叫 release_manager.py (自動合併/Tag/Push)
+        PM->>PM: 正式上線，轉移至 Phase 5
+    end
 ```
 </details>
 

@@ -26,61 +26,58 @@
 
 ```mermaid
 graph TD
-    %% 角色定義
-    CEO((CEO / 您))
-    PM[專案經理 PM]
-    ARCH[架構師 Architect]
-    DQA[品管 DQA]
-    ENG[工程師 Engineer]
-    TE[測試工程師 TE]
+    %% Define Styles
+    classDef phase fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#fff;
+    classDef ecc fill:#c0392b,stroke:#e74c3c,stroke-width:2px,color:#fff;
+    classDef agent fill:#2980b9,stroke:#3498db,stroke-width:2px,color:#fff;
+    classDef security fill:#f39c12,stroke:#f1c40f,stroke-width:2px,color:#fff;
 
-    %% 流程
-    CEO -- "下達商業需求" --> Phase0
+    %% Phases
+    Start((開始專案)) --> P0[Phase 0: 戰略定義\n(初始化大腦 / 載入舊 Context)]:::phase
+    P0 -- "/approve" --> P1[Phase 1: 架構設計與微觀規劃\n(產出 PRD 與架構設計)]:::phase
+    P1 -- "/approve" --> P2[Phase 2: DQA 進場與邊界規劃\n(產出測試計畫)]:::phase
     
-    subgraph "Phase 0: 戰略定義"
-        Phase0[產出 PRD 規格書] -.-> PM
-    end
-    Phase0 -- "需 CEO /approve 放行" --> Phase1
+    P2 --> Policy[產生 org_security_policy.json\n(AgentShield 基準)]:::security
+    Policy -- "/approve" --> Eng
     
-    subgraph "Phase 1: 架構設計"
-        Phase1[產出系統架構與技術選型] -.-> ARCH
-    end
-    Phase1 -- "需 CEO /approve 放行" --> Phase2
-    
-    subgraph "Phase 2: 測試驅動開發"
-        Phase2[撰寫 TDD/SDD 測試與驗收標準] -.-> DQA
-    end
-    Phase2 -- "需 CEO /approve 放行" --> Phase3
-    
-    subgraph "Phase 3: 實作與封裝 (物理沙盒)"
-        Phase3[在 src/ 進行開發 (無 Commit 權限)] -.-> ENG
-    end
-    Phase3 --> Phase4
-    
-    subgraph "Phase 4: 驗收與教訓總結"
-        Phase4[執行測試與紀錄 lessons_learned] -.-> TE
-        Phase4 -.-> DQA
+    subgraph P3 [Phase 3: 實作與封裝 (核心物理沙盒迴圈)]
+        direction TB
+        Eng[Engineer Agent 開發]:::agent --> Shield{AgentShield Hook\n(攔截危險指令/密碼)}:::security
+        Shield -- 失敗 (Autofix) --> Eng
+        Shield -- 通過 --> Smoke[工程師自檢編譯]
+        Smoke --> Queue[單線程審查佇列]
+        Queue --> TDD[TDD DQA 第一關\n極端測試/覆蓋率]:::agent
+        TDD -- 退回 --> Eng
+        TDD -- 通過 --> SDD[SDD DQA 第二關\n體驗與業務邏輯]:::agent
+        SDD -- 退回 --> Eng
+        SDD -- 通過 --> Claude[Claude DQA 第三關\n(外部獨立審查)]:::agent
+        Claude -- 退回 --> Eng
+        Claude -- 通過 --> Merge(合併代碼與大腦清洗)
     end
     
-    Phase4 -- "需 CEO /approve 發布" --> Release((正式上線))
+    Merge --> CheckMilestone{Milestones\n全部完成?}
+    CheckMilestone -- 否 (進入下一個任務) --> P1
+    CheckMilestone -- 是 (全部完工) --> P4[Phase 4: 系統驗收與發布\n(實機盲測與自動上線)]:::phase
     
-    Release --> Phase5
+    P4 -- "/approve" --> P5[Phase 5: 產品上線後維護]:::phase
+    P5 -- "宣告結案" --> P6[Phase 6: 專案封裝與退場]:::phase
+    P6 -- "/approve" --> End((專案休眠))
     
-    subgraph "Phase 5: 產品上線後維護"
-        Phase5[活體知識庫與新迭代觸發] -.-> PM
+    %% Continuous Learning Flow (Any Phase)
+    subgraph ECC 持續學習與防禦迴圈 (Continuous Learning)
+        ErrorEvent((踩坑/教訓產生)) --> Propose[任何人提出教訓 Proposal]
+        Propose --> VerifyHook{verify_lesson_hook.py}:::ecc
+        VerifyHook --> Subagent[Lesson Verifier 子代理人\n(檢驗通用性)]:::agent
+        Subagent -- [REJECTED]\n(累積5次呼叫 CEO) --> Propose
+        Subagent -- [APPROVED] --> DB[(全球知識庫\nlessons_learned.md)]
     end
     
-    Phase5 -- "CEO 宣告結案" --> Phase6
+    %% Connections for Learning
+    Eng -.踩坑.-> ErrorEvent
+    TDD -.抓蟲.-> ErrorEvent
+    P1 -.規劃失誤.-> ErrorEvent
     
-    subgraph "Phase 6: 專案封裝與退場"
-        Phase6[產出交接手冊與釋放資源] -.-> PM
-    end
-    
-    Phase6 --> Sunset((專案休眠))
-    
-    %% 樣式
-    classDef phase fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    class Phase0,Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phase;
+    DB -.Phase 0/1 喚醒時\n精準載入(query_lesson).-> P0
 ```
 
 

@@ -83,7 +83,6 @@ graph TD
     class Phase0,Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phase;
 ```
 
-```
 
 ### 🔍 各階段詳細作業流程 (Detailed Phase Workflows)
 
@@ -238,11 +237,11 @@ sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
     participant KB as 教訓知識庫
-    CEO->>PM: 詢問系統架構 / 提出新需求
-    PM->>KB: 查閱 lessons_learned 與架構文件
-    PM->>CEO: 解答問題 (作為活體知識庫)
-    opt 若為新需求 (New Feature)
-        PM->>PM: 觸發全新 Phase 1 迭代循環
+    CEO->>PM: 詢問架構細節 / 提出新功能需求
+    PM->>KB: 查閱 lessons_learned.md 與架構文件
+    PM->>CEO: 解答問題 (化身活體知識庫)
+    opt 若為新功能需求
+        PM->>PM: 帶著繼承的知識，重新發動 Phase 1
     end
 ```
 </details>
@@ -258,9 +257,9 @@ sequenceDiagram
     CEO->>PM: 宣告專案結案 / 準備移交
     PM->>KB: 統整所有知識與血淚史
     PM->>PM: 產出 Project_Handover_Manual.md (交接手冊)
-    PM->>PM: kill_all 徹底終止所有子代理人
-    PM->>CEO: 報告封裝完畢，請求斷線
-    CEO-->>PM: /approve 准許休眠
+    PM->>PM: kill_all 徹底終止並釋放所有子代理人
+    PM->>PM: 於 Master_Log.md 寫下最終結案紀錄 (墓誌銘)
+    PM->>CEO: 報告封裝完畢，準備斷線休眠
 ```
 </details>
 

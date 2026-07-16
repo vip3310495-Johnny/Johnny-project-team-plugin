@@ -57,7 +57,7 @@ graph TD
     
     Merge --> CheckMilestone{"Milestones<br/>全部完成?"}
     CheckMilestone -- 否 (進入下一個任務) --> P1
-    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 系統驗收與發布<br/>(實機盲測與自動上線)"]:::phase
+    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 成品驗收階段<br/>(實機盲測與自動上線)"]:::phase
     
     P4 -- "/approve" --> P5[Phase 5: 產品上線後維護]:::phase
     P5 -- "宣告結案" --> P6[Phase 6: 專案封裝與退場]:::phase
@@ -213,7 +213,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary><b>Phase 4: 驗收與教訓總結 (點擊展開)</b></summary>
+<summary><b>Phase 4: 成品驗收階段 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -293,7 +293,9 @@ sequenceDiagram
 2. **Phase 1 (架構設計)**：規劃軟體藍圖，決定要使用什麼技術。
 3. **Phase 2 (測試驅動開發 TDD/SDD)**：在寫任何一行功能前，DQA (品管) 會先寫好測試與檢查標準。
 4. **Phase 3 (實作與封裝)**：工程師在安全的沙盒中進行開發。
-5. **Phase 4 (驗收與教訓總結)**：統整本次開發的經驗，升級專案大腦。
+5. **Phase 4 (成品驗收階段)**：統整本次開發的經驗並執行最終實機盲測，自動封裝發布。
+6. **Phase 5 (產品上線後維護)**：專案經理化身活體知識庫，準備觸發新一輪迭代。
+7. **Phase 6 (專案封裝與退場)**：統整血淚史產出交接手冊，強制終止並釋放所有運算資源。
 
 > **🛑 防偷渡機制**：任何階段的切換，都必須由您親自輸入 `/approve` 授權，AI 絕對無法私自跳關！
 

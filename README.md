@@ -318,6 +318,23 @@ sequenceDiagram
 
 ---
 
+## 🛠️ 依賴與前置需求 (Prerequisites)
+為了讓整套「物理防爆沙盒」與「自動化工作流」順利運行，您的電腦必須安裝以下外部套件：
+
+### 核心必備 (Required)
+1. **[Google Antigravity](https://github.com/google/antigravity)**：本工作流程的宿主 (Host) 與高階決策中樞。
+2. **[Git](https://git-scm.com/)**：用於版本控制與 `release_manager.py` 自動上版。
+3. **[Docker](https://www.docker.com/)**：**【絕對必要】** 用於 TDD DQA 在完全隔離的虛擬貨櫃中執行測試，嚴格防止 AI 惡意代碼破壞您的本機環境。
+4. **[Python 3.8+](https://www.python.org/)**：用於執行系統底層的各種安檢閘門與防禦腳本 (如 `agent_shield_hook.py`, `verify_lesson_hook.py`)。
+
+### 外部打工部隊 (Highly Recommended)
+* **[Claude Code CLI](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview)** (`npm install -g @anthropic-ai/claude-code`)：用於 Phase 3 的「Claude DQA 最終抓漏防線」與外包實作任務。本系統會透過終端機自動呼叫它。
+
+### 視覺審查輔助 (Optional)
+* **`gstack` / `omniparser`**：若有安裝，SDD DQA 將能透過無頭瀏覽器與 UI 座標解析技術，精準執行視覺破版與對齊測試。(未安裝時將優雅降級為截圖目視審查)。
+
+---
+
 ## 🚀 如何開始使用？ (How to Start)
 
 1. **安裝 Plugin**

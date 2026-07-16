@@ -64,10 +64,152 @@ graph TD
     
     Phase4 -- "需 CEO /approve 發布" --> Release((正式上線))
     
+    Release --> Phase5
+    
+    subgraph "Phase 5: 產品上線後維護"
+        Phase5[活體知識庫與新迭代觸發] -.-> PM
+    end
+    
+    Phase5 -- "CEO 宣告結案" --> Phase6
+    
+    subgraph "Phase 6: 專案封裝與退場"
+        Phase6[產出交接手冊與釋放資源] -.-> PM
+    end
+    
+    Phase6 --> Sunset((專案休眠))
+    
     %% 樣式
     classDef phase fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    class Phase0,Phase1,Phase2,Phase3,Phase4 phase;
+    class Phase0,Phase1,Phase2,Phase3,Phase4,Phase5,Phase6 phase;
 ```
+
+```
+
+### 🔍 各階段詳細作業流程 (Detailed Phase Workflows)
+
+<details>
+<summary><b>Phase 0: 戰略定義 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    actor CEO
+    participant PM as 專案經理 (PM)
+    participant KB as 教訓知識庫
+    CEO->>PM: 提出商業需求 (Feature Request)
+    PM->>KB: 讀取過去類似專案的失敗教訓
+    PM->>PM: 撰寫 PRD (產品需求規格)
+    PM->>CEO: 提交方案單選題 (A/B/C)
+    CEO-->>PM: /approve 選擇並放行
+```
+</details>
+
+<details>
+<summary><b>Phase 1: 架構設計 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    participant PM as 專案經理 (PM)
+    participant Arch as 架構師 (Architect)
+    participant CEO
+    PM->>Arch: 交付 PRD
+    Arch->>Arch: 進行技術選型與系統設計
+    Arch->>PM: 產出 System Architecture
+    PM->>CEO: 回報架構藍圖與潛在風險
+    CEO-->>PM: /approve 授權進入開發
+```
+</details>
+
+<details>
+<summary><b>Phase 2: 測試驅動開發 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    participant PM as 專案經理 (PM)
+    participant DQA as 品管 (TDD/SDD)
+    participant CEO
+    PM->>DQA: 交付 PRD 與架構圖
+    DQA->>DQA: 撰寫 TDD 測試單元 (看邏輯)
+    DQA->>DQA: 撰寫 SDD 測試腳本 (看體驗)
+    DQA->>PM: 產出驗收標準與測試工具
+    PM->>CEO: 請求授權開始實作
+    CEO-->>PM: /approve 放行
+```
+</details>
+
+<details>
+<summary><b>Phase 3: 實作與封裝 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    participant PM as 專案經理 (PM)
+    participant Claude as Claude 外包部隊
+    participant Guard as 物理防爆沙盒
+    PM->>Claude: 發包實作任務
+    loop 寫扣與自我修正
+        Claude->>Guard: 嘗試寫入代碼
+        alt 寫在 src/ 內
+            Guard-->>Claude: 允許寫入
+        else 寫在 src/ 外 或 執行 git commit
+            Guard-->>Claude: 🛑 攔截並紀錄 Log
+        end
+    end
+    Claude->>PM: 提交交接報告
+    PM->>PM: 自動進入 Phase 4
+```
+</details>
+
+<details>
+<summary><b>Phase 4: 驗收與教訓總結 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    participant PM as 專案經理 (PM)
+    participant TE as 測試工程師 (TE)
+    participant DQA as 品管審查
+    participant CEO
+    PM->>TE: 指派執行 Phase 2 寫好的測試
+    TE->>TE: 零寫入權限執行驗證
+    TE->>DQA: 提交測試結果
+    DQA->>PM: 總結此次失敗經驗，轉化為 SOP
+    PM->>PM: 更新 lessons_learned.md
+    PM->>CEO: 提交結案報告
+    CEO-->>PM: /approve 發布上線
+```
+</details>
+
+<details>
+<summary><b>Phase 5: 產品上線後維護 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    actor CEO
+    participant PM as 專案經理 (PM)
+    participant KB as 教訓知識庫
+    CEO->>PM: 詢問系統架構 / 提出新需求
+    PM->>KB: 查閱 lessons_learned 與架構文件
+    PM->>CEO: 解答問題 (作為活體知識庫)
+    opt 若為新需求 (New Feature)
+        PM->>PM: 觸發全新 Phase 1 迭代循環
+    end
+```
+</details>
+
+<details>
+<summary><b>Phase 6: 專案封裝與退場 (點擊展開)</b></summary>
+
+```mermaid
+sequenceDiagram
+    actor CEO
+    participant PM as 專案經理 (PM)
+    participant KB as 教訓知識庫
+    CEO->>PM: 宣告專案結案 / 準備移交
+    PM->>KB: 統整所有知識與血淚史
+    PM->>PM: 產出 Project_Handover_Manual.md (交接手冊)
+    PM->>PM: kill_all 徹底終止所有子代理人
+    PM->>CEO: 報告封裝完畢，請求斷線
+    CEO-->>PM: /approve 准許休眠
+```
+</details>
 
 ---
 

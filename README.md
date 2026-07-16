@@ -40,7 +40,7 @@ graph TD
     P2 --> Policy["產生 org_security_policy.json<br/>(AgentShield 基準)"]:::security
     Policy -- "/approve" --> Eng
     
-    subgraph P3 [Phase 3: 實作與封裝核心迴圈]
+    subgraph P3 ["Phase 3: 實作與封裝核心迴圈"]
         direction TB
         Eng[Engineer Agent 開發]:::agent --> Shield{"AgentShield Hook<br/>(攔截危險指令/密碼)"}:::security
         Shield -- 失敗 (Autofix) --> Eng
@@ -64,7 +64,7 @@ graph TD
     P6 -- "/approve" --> End((專案休眠))
     
     %% Continuous Learning Flow (Any Phase)
-    subgraph ECC 持續學習與防禦迴圈 (Continuous Learning)
+    subgraph ECC ["持續學習與防禦迴圈 (Continuous Learning)"]
         ErrorEvent((踩坑/教訓產生)) --> Propose[任何人提出教訓 Proposal]
         Propose --> VerifyHook{verify_lesson_hook.py}:::ecc
         VerifyHook --> Subagent["Lesson Verifier 子代理人<br/>(檢驗通用性)"]:::agent

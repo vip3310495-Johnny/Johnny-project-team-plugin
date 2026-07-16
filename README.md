@@ -33,31 +33,31 @@ graph TD
     classDef security fill:#f39c12,stroke:#f1c40f,stroke-width:2px,color:#fff;
 
     %% Phases
-    Start((開始專案)) --> P0[Phase 0: 戰略定義\n(初始化大腦 / 載入舊 Context)]:::phase
-    P0 -- "/approve" --> P1[Phase 1: 架構設計與微觀規劃\n(產出 PRD 與架構設計)]:::phase
-    P1 -- "/approve" --> P2[Phase 2: DQA 進場與邊界規劃\n(產出測試計畫)]:::phase
+    Start((開始專案)) --> P0["Phase 0: 戰略定義<br/>(初始化大腦 / 載入舊 Context)"]:::phase
+    P0 -- "/approve" --> P1["Phase 1: 架構設計與微觀規劃<br/>(產出 PRD 與架構設計)"]:::phase
+    P1 -- "/approve" --> P2["Phase 2: DQA 進場與邊界規劃<br/>(產出測試計畫)"]:::phase
     
-    P2 --> Policy[產生 org_security_policy.json\n(AgentShield 基準)]:::security
+    P2 --> Policy["產生 org_security_policy.json<br/>(AgentShield 基準)"]:::security
     Policy -- "/approve" --> Eng
     
-    subgraph P3 [Phase 3: 實作與封裝 (核心物理沙盒迴圈)]
+    subgraph P3 [Phase 3: 實作與封裝核心迴圈]
         direction TB
-        Eng[Engineer Agent 開發]:::agent --> Shield{AgentShield Hook\n(攔截危險指令/密碼)}:::security
+        Eng[Engineer Agent 開發]:::agent --> Shield{"AgentShield Hook<br/>(攔截危險指令/密碼)"}:::security
         Shield -- 失敗 (Autofix) --> Eng
         Shield -- 通過 --> Smoke[工程師自檢編譯]
         Smoke --> Queue[單線程審查佇列]
-        Queue --> TDD[TDD DQA 第一關\n極端測試/覆蓋率]:::agent
+        Queue --> TDD["TDD DQA 第一關<br/>極端測試/覆蓋率"]:::agent
         TDD -- 退回 --> Eng
-        TDD -- 通過 --> SDD[SDD DQA 第二關\n體驗與業務邏輯]:::agent
+        TDD -- 通過 --> SDD["SDD DQA 第二關<br/>體驗與業務邏輯"]:::agent
         SDD -- 退回 --> Eng
-        SDD -- 通過 --> Claude[Claude DQA 第三關\n(外部獨立審查)]:::agent
+        SDD -- 通過 --> Claude["Claude DQA 第三關<br/>(外部獨立審查)"]:::agent
         Claude -- 退回 --> Eng
         Claude -- 通過 --> Merge(合併代碼與大腦清洗)
     end
     
-    Merge --> CheckMilestone{Milestones\n全部完成?}
+    Merge --> CheckMilestone{"Milestones<br/>全部完成?"}
     CheckMilestone -- 否 (進入下一個任務) --> P1
-    CheckMilestone -- 是 (全部完工) --> P4[Phase 4: 系統驗收與發布\n(實機盲測與自動上線)]:::phase
+    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 系統驗收與發布<br/>(實機盲測與自動上線)"]:::phase
     
     P4 -- "/approve" --> P5[Phase 5: 產品上線後維護]:::phase
     P5 -- "宣告結案" --> P6[Phase 6: 專案封裝與退場]:::phase
@@ -67,9 +67,9 @@ graph TD
     subgraph ECC 持續學習與防禦迴圈 (Continuous Learning)
         ErrorEvent((踩坑/教訓產生)) --> Propose[任何人提出教訓 Proposal]
         Propose --> VerifyHook{verify_lesson_hook.py}:::ecc
-        VerifyHook --> Subagent[Lesson Verifier 子代理人\n(檢驗通用性)]:::agent
-        Subagent -- [REJECTED]\n(累積5次呼叫 CEO) --> Propose
-        Subagent -- [APPROVED] --> DB[(全球知識庫\nlessons_learned.md)]
+        VerifyHook --> Subagent["Lesson Verifier 子代理人<br/>(檢驗通用性)"]:::agent
+        Subagent -- "[REJECTED] (累積5次呼叫 CEO)" --> Propose
+        Subagent -- [APPROVED] --> DB[("全球知識庫<br/>lessons_learned.md")]
     end
     
     %% Connections for Learning
@@ -77,7 +77,7 @@ graph TD
     TDD -.抓蟲.-> ErrorEvent
     P1 -.規劃失誤.-> ErrorEvent
     
-    DB -.Phase 0/1 喚醒時\n精準載入(query_lesson).-> P0
+    DB -."Phase 0/1 喚醒時<br/>精準載入(query_lesson)".-> P0
 ```
 
 

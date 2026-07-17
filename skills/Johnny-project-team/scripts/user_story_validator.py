@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 驗證 User Story 格式 (身為...我想...以便於...) (references/vibe-pm-agent.md 腳本工具索引)
 

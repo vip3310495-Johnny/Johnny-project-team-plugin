@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 檢查測試覆蓋率是否達標 (預設 80%) (references/engineering-agent.md 腳本工具索引)
 

@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 妥協並記錄 UX 債務，供 Milestone 結束時提出重構建議 (references/vibe-pm-agent.md 腳本工具索引)
 

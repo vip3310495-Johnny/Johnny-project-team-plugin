@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # DQA 審查完畢後觸發，可用於將測試結果同步至 Jira 或 Slack (references/hooks-system.md)
 

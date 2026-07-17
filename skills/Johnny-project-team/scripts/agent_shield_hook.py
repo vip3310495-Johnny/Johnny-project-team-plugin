@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # AgentShield 安全護欄自檢 Hook，掃描危險指令與機密外洩 (references/phases/phase2.md, phase3.md)
 

@@ -1,6 +1,11 @@
 import argparse
 import os
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 在 Engineer 或 PM 嘗試 git commit 前觸發，通常掛載 black, flake8 等 Linter (references/hooks-system.md)
 

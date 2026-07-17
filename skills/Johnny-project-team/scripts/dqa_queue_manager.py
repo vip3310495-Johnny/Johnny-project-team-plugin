@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 單線程 DQA 審查佇列管理器 (references/phases/phase3.md 第 4 節)
 

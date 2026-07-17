@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 將 Log Agent 產出的暫存 Markdown 安全彙整寫入 Logs/Master_Log.md (references/log-agent.md)
 

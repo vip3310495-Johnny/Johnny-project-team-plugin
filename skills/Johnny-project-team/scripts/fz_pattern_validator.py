@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # Z 字型/F 字型視線動線檢查 (references/vibe-pm-agent.md 腳本工具索引)
 

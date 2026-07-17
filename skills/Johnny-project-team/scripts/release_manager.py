@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 安全發布程序腳本，自動執行分支合併/語意化版號遞增/git tag/push (references/phases/phase4.md 第 5 節)
 

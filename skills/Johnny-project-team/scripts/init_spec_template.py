@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 生成 Markdown 格式的技術任務清單 (references/engineering-agent.md 腳本工具索引)
 

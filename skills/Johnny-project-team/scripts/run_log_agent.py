@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 觸發 Log & Observability Agent 的 3-script pipeline 協調器 (references/log-agent.md)
 

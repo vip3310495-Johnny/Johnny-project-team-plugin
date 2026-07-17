@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 進入 Phase 1 (細節計畫) 之前觸發 (references/hooks-system.md)
 

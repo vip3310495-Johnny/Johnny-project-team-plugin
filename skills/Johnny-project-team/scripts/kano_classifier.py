@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 狩野模型分類 Must-Be, Attractive (references/vibe-pm-agent.md 腳本工具索引)
 

@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 首尾效應檢查，確保核心功能置於導覽列首尾 (references/vibe-pm-agent.md 腳本工具索引)
 

@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 專案所有模組 (Milestone) 開發與單體驗收完畢後觸發 (references/hooks-system.md)
 

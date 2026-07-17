@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # DQA 測試工具箱管理器：register 註冊可重用測試腳本 / search 查閱軍火庫清單 (references/dqa-analysis.md)
 

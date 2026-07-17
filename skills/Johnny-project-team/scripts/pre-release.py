@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # Phase 4 (系統整機驗收) 通過後，正式進入部署階段前觸發。
 # 負責檢查並確保 PM、Engineer、DQA 與 Architect 四方皆已達成「全票同意」 (references/hooks-system.md)

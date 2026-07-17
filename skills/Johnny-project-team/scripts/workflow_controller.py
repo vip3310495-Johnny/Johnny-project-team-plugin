@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # Hooks 系統背景控制器，依生命週期自動傳入引數呼叫對應 Hook (references/hooks-system.md)
 

@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 掃描原始碼層級是否有密碼/Token 外洩 (references/engineering-agent.md 腳本工具索引)
 

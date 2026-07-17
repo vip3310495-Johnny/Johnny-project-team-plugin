@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 5 Whys 深度分析，禁止怪罪人為疏忽 (references/vibe-pm-agent.md 腳本工具索引)
 

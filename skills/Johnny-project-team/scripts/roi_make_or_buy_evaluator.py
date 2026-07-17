@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 依開發成本與整合時間評估自研或購買 API 的 ROI (references/vibe-pm-agent.md 腳本工具索引)
 

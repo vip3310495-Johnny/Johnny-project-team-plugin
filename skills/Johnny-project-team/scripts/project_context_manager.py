@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 設定專案屬性 (B2B/B2C/內部工具)，動態調整後續驗證腳本的嚴格閾值 (references/vibe-pm-agent.md 腳本工具索引)
 

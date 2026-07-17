@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # MoSCoW 分級排序器 (references/vibe-pm-agent.md 腳本工具索引)
 

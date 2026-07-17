@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 儲存 Log Agent 萃取出的教訓至全局知識庫 (references/log-agent.md)
 

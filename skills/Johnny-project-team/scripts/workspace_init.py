@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 初始化標準專案目錄結構 (PM/, Logs/, SDD_DQA/tool/, TDD_DQA/tool/, src/ 等)，具冪等性 (references/phases/phase0.md 第 2 節)
 

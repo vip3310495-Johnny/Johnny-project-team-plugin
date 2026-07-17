@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # PM 記憶壓縮驗證器，確保 Digest 摘要小於 800 字 (references/phases/phase3.md 第 8 節)
 

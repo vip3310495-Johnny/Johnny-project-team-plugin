@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 視覺顯著性評估 (references/vibe-pm-agent.md 腳本工具索引)
 

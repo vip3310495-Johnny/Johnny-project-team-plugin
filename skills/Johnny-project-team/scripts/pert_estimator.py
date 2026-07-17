@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # PERT 三點估算法推算工時：(樂觀 + 4*最可能 + 悲觀) / 6 (references/vibe-pm-agent.md 腳本工具索引)
 

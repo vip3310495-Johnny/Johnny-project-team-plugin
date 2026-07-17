@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # DQA 開始審查前觸發，可用於自動匯入測試資料庫 (references/hooks-system.md)
 

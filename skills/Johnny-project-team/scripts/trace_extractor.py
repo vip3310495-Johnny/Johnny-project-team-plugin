@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 從原始執行紀錄中過濾雜訊，萃取乾淨的 Action Trace JSON (references/log-agent.md)
 

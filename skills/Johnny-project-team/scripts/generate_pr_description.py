@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 生成標準化交接模板 (PR Description) (references/engineering-agent.md 腳本工具索引)
 

@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 防呆機制檢測 (required field validation) (references/vibe-pm-agent.md 腳本工具索引)
 

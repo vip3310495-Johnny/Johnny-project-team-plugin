@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 蘇格拉底提問挑戰假定與極端情境 (references/vibe-pm-agent.md 腳本工具索引)
 

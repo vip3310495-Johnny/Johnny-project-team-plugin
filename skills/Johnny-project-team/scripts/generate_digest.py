@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 產生 lessons_learned 的 DIGEST.md 摘要層 (references/phases/phase0.md 第 3 節)
 

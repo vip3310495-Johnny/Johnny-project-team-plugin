@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 依角色標籤與關鍵字檢索歷史教訓 (references/lesson-learnt-registry.md, engineering-agent.md)
 

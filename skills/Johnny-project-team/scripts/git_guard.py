@@ -1,6 +1,11 @@
 import argparse
 import sys
 import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
+import os
 
 # Git Commit 阻擋器 (Pre-commit Hook)
 

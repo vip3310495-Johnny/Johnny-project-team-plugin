@@ -1,5 +1,10 @@
 import argparse
 import sys
+import os
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
 
 # 打斷假性共識，防範 AI 諂媚效應 (Agent Sycophancy) (references/vibe-pm-agent.md 腳本工具索引)
 

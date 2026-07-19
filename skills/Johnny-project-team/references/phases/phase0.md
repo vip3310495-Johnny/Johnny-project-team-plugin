@@ -23,12 +23,13 @@ For a new project, the PM MUST initialize the environment:
 PM 必須引導 DQA 與 Architect 共同制定全局的測試與觀測策略。
 1. **Lesson Learn Bootstrap (知識繼承)**：讀取 `.agents/lessons_learned/DIGEST.md`（若不存在，執行 `python scripts/generate_digest.py` 產生）。**嚴禁**在 Phase 0 讀取 `entries/` 內任何單筆全文或整份 index，只吸收 DIGEST 的摘要層。若 DIGEST 中某條教訓與本次專案技術棧高度相關，可在 PRD 草案備註，留待後續 Phase 用 `query_lesson.py` 深查全文。
 2. **Team & AI Model Composition [CRITICAL]**: PM 必須檢視目前系統可用的 LLM 模型，並**主動列表推薦** CEO 應該在哪些角色上使用哪種模型，絕對禁止只丟空白問題讓 CEO 盲選。
-   - *推薦範例*：「建議 Architect 與 PM 使用推論最強的模型 (如 `Gemini 3.1 Pro`)」、「建議獨立審查官強制使用 Claude Code CLI (`claude-sonnet 5`)」。
-   - PM 必須將這個「模型與角色適配推薦矩陣」呈現給 CEO 進行最終確認與微調。
+   - PM 必須複製 `.agents/skills/Johnny-project-team/references/templates/Model_Recommendation_Matrix.md` 範本，在工作區產生實體檔案 `PM/Model_Recommendation_Matrix.md`。
+   - 填寫該矩陣內的各個欄位 (包含：角色名稱、設定檔位置、角色作用、推薦模型、思考層級)。
+   - *推薦範例*：「建議 Architect 與 PM 使用推論最強的模型 (如 `Gemini 2.0 Pro`)，思考層級 High」、「建議獨立審查官強制使用 Claude Code CLI (`claude-sonnet 3.7`)」。
 3. **Clarification**: Ask the CEO for the core project goal and clarify ambiguities. Assume the CEO has NO engineering background; use simple logic.
 4. **Global PRD Generation**: Based on the gathered context, the PM MUST draft a highly structured **Global PRD Draft** and save it to `PM/PRD.md`.
    - **注意：Phase 0 的 PRD 是一個針對系統面的「全局規格書」。在進入各個 Milestone 前，PM 才需要再提出該階段詳細的「開發細節計畫書」。**
-   - The PRD Draft MUST include: Overview, Requirements & Assumptions, **Milestone Breakdown** (If >=5 Milestones, mark as a "Complex Project"), and **LLM Team Roster** (將剛剛 CEO 確認的模型推薦矩陣記錄下來，避免重啟時遺忘)。
+   - The PRD Draft MUST include: Overview, Requirements & Assumptions, **Milestone Breakdown** (If >=5 Milestones, mark as a "Complex Project"), and **LLM Team Roster** (請附上剛才產生的 `PM/Model_Recommendation_Matrix.md` 檔案連結)。
 
 ## Step 4: UI/UX Exploration (If Applicable)
 If the project involves a user interface:
@@ -54,8 +55,8 @@ Before presenting to the CEO, the PM MUST involve the specialized DQA roles:
    - **審查報告 (Audit Report)**: 審查結束後，TDD DQA 必須撰寫報告並存入 `/TDD_DQA/` (例如：`M1_Review_v1.md`)。
 
 ## Step 7: 視覺化報告與最終盤問 (Grill-Me Confirmation)
-1. PM 必須將 `PM/PRD.md`、**System Flow Diagram**、ADRs、DQA 策略、選定的 UI，以及**「模型與角色適配推薦矩陣 (Model Recommendation Matrix)」**一併展示給 CEO。
-2. PM 必須主動強烈建議：「CEO，為了確保我們對產品規格、架構決策與 AI 模型指派有絕對的共識，請您務必先使用 `/grill-me` 指令對這份計畫進行嚴格盤問。盤問結束且確認無誤後，請輸入 `/approve` 讓我能進入下一個階段。」
+1. PM 必須將 `PM/PRD.md`、**System Flow Diagram**、ADRs、DQA 策略、選定的 UI，以及實體的 **`PM/Model_Recommendation_Matrix.md`** 一併展示給 CEO。
+2. PM 必須主動強烈建議：「CEO，為了確保我們對產品規格、架構決策與 AI 模型指派有絕對的共識，請您務必先開啟並審閱 `PM/Model_Recommendation_Matrix.md` 的內容。確認無誤後，請使用 `/grill-me` 指令對這份計畫進行嚴格盤問。盤問結束且確認無誤後，請輸入 `/approve` 讓我能進入下一個階段。」
 3. **[防呆逃生門]**: 若 CEO 陷入「無決斷力癱瘓」，PM 必須主動呼叫 `scripts/analysis_paralysis_breaker.py`。
 4. **[STOP AND WAIT]**: PM 必須強制暫停，等待 CEO 的盤問與最終輸入。
 

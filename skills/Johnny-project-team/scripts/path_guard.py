@@ -16,6 +16,11 @@ def main():
 
     print("[HOOK] path_guard.py 開始執行...")
     
+    # 檢查 VIP 通行證 (僅限高階管理員/PM使用)
+    if os.environ.get("SKIP_PATH_GUARD") == "1":
+        print("[WARN] 偵測到 VIP 通行證 (SKIP_PATH_GUARD=1)，略過物理隔離檢查！")
+        sys.exit(0)
+    
     # 取得 staged files
     try:
         result = subprocess.run(['git', 'diff', '--cached', '--name-only'], capture_output=True, text=True, check=True)
@@ -28,7 +33,7 @@ def main():
         sys.exit(0)
         
     code_extensions = ('.py', '.js', '.ts', '.jsx', '.tsx', '.go', '.java', '.cpp', '.c', '.rs', '.php', '.rb')
-    allowed_dirs = ('src/', 'tests/', 'TDD_DQA/', 'SDD_DQA/', 'scripts/', '.agents/')
+    allowed_dirs = ('src/', 'tests/', 'TDD_DQA/', 'SDD_DQA/')
     
     allowed_root_files = ('setup.py', 'manage.py', 'run.py', 'test.py')
     

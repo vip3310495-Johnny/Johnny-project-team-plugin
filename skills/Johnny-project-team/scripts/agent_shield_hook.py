@@ -33,8 +33,15 @@ def main():
         "eval("
     ]
 
-    # 掃描 src/ 與 scripts/ 目錄下的代碼
-    scan_dirs = [os.path.join(project_dir, "src"), os.path.join(project_dir, "scripts")]
+    # 掃描涵蓋 path_guard.py 允許的所有目錄，消滅雷達死角
+    scan_dirs = [
+        os.path.join(project_dir, "src"), 
+        os.path.join(project_dir, "scripts"),
+        os.path.join(project_dir, "tests"),
+        os.path.join(project_dir, "TDD_DQA"),
+        os.path.join(project_dir, "SDD_DQA"),
+        os.path.join(project_dir, ".agents")
+    ]
     violations = []
 
     for d in scan_dirs:
@@ -44,8 +51,13 @@ def main():
             for file in files:
                 if not file.endswith(('.py', '.js', '.ts', '.sh', '.bash', '.sql')):
                     continue
-                    
+                
                 filepath = os.path.join(root, file)
+                
+                # 白名單過濾機制升級：必須精準匹配 scripts 目錄下的正牌腳本，杜絕工程師的同名偽裝攻擊
+                rel_path = os.path.relpath(filepath, project_dir).replace("\\", "/")
+                if rel_path == "scripts/agent_shield_hook.py":
+                    continue
                 try:
                     with open(filepath, 'r', encoding='utf-8') as f:
                         lines = f.readlines()

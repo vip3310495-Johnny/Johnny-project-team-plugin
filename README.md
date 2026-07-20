@@ -251,9 +251,12 @@ sequenceDiagram
 sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
+    participant Arch as 架構師 (Architect)
     participant KB as 教訓知識庫
     CEO->>PM: 詢問架構細節 / 提出新功能需求
-    PM->>KB: 查閱 lessons_learned.md 與架構文件
+    PM->>Arch: 請求架構師回顧 System Architecture
+    Arch->>KB: 查閱 As-Built Architecture 與 lessons_learned.md
+    Arch->>PM: 提供現有架構分析與擴充建議
     PM->>CEO: 解答問題 (化身活體知識庫)
     opt 若為新功能需求
         PM->>PM: 帶著繼承的知識，重新發動 Phase 1
@@ -286,6 +289,7 @@ sequenceDiagram
 我們不依賴 AI 的「道德勸說」，而是從系統底層進行**物理封鎖**：
 * **目錄隔離防線 (`path_guard`)**：工程師 AI 被物理限制只能在 `src/` (源碼) 目錄下寫扣，絕對無法偷改您的系統配置或專案核心大腦。
 * **發布權限沒收 (`git_guard`)**：工程師 AI **沒有**上版權限 (`git commit`)。所有代碼變更都必須經過您 (CEO) 的點頭，才能正式寫入專案版本中。
+* **DQA 三重鎖定與視覺閘門 (`phase_gate_hook`)**：若未集齊 TDD、SDD 與 Claude 的全數綠燈，或 PM 未依規定產出系統架構圖與資料流向圖，系統將亮紅燈強制鎖死，絕對禁止向 CEO 請求 `/approve`。
 
 ### 2. 🚦 階段閘門制 (Phase Gates)
 專案不會一開始就亂寫程式。我們強制導入中大型專案必備的 5 大階段：
@@ -303,8 +307,22 @@ sequenceDiagram
 本外掛自動內建多個原生 AI 角色，互相監督：
 * **PM (專案經理)**：負責跟您溝通，把商業需求翻譯給工程師聽。
 * **Architect (架構師)**：負責把關系統不要越寫越肥大。
-* **DQA (三重品管)**：分為 TDD (看程式邏輯)、SDD (看商業邏輯) 與 Claude DQA (專司審查外包交付品質)，三管齊下確保工程師沒有偷懶。
+* **DQA (品管與審查陣列)**：包含 TDD (理科，看邏輯與邊界)、SDD (文科，看體驗與商業需求) 以及 Claude (外部模型防偽審查)，三管齊下確保工程師沒有偷懶。
+* **Security DQA (資安特種部隊)**：融合應用層漏洞、供應鏈與網路架構掃描能力。專屬於高敏感功能的外掛品管，可由 PM 手動喚醒。
 * **TE (測試工程師)**：擁有**零寫入權限**的純淨觀察者，確保測試報告絕對客觀。
+
+#### 🤖 模型與角色適配推薦矩陣 (Model Recommendation Matrix)
+在專案初期 (Phase 0)，PM 會為下列預設代理人分配最適合的模型與思考層級，並交由 CEO 簽核：
+
+| 角色名稱 (Role) | 設定檔位置 | 角色作用 (Description) |
+| :--- | :--- | :--- |
+| **PM (主控端)** | `skills/Johnny-project-team/SKILL.md` | 專案大腦。負責流程控管、需求拆解、指揮調度其他子代理人，並負責與 CEO 溝通。 |
+| **Architect** | `agents/architect.json` | 系統架構師。負責決定技術棧、畫出架構圖，以及制定開發規範。 |
+| **Engineer** | `agents/engineer.json` | 核心開發者。負責根據架構圖與 PRD 進行具體的程式碼實作。 |
+| **TDD DQA** | `agents/tdd_dqa.json` | 理科品管。負責撰寫單元/E2E測試，嚴格審查極端邊界，並確保覆蓋率。 |
+| **SDD DQA** | `agents/sdd_dqa.json` | 文科品管。負責核對實作是否符合 PRD 業務邏輯，並進行 UX/UI 審查。 |
+| **Security DQA** | `agents/security_dqa.json` | 資安品管 (外掛)。負責高敏感功能之漏洞掃描、供應鏈盤點與越權防護。 |
+| **Claude DQA** | `claude` CLI | 外部獨立審查員。透過不同模型架構進行防偽與交叉驗證抓漏。 |
 
 ### 4. 🧰 內建擴充技能包 (Built-in Skills)
 除了專案經理主技能外，Plugin 還內建了多個強大的輔助技能，全方位強化專案體質：
@@ -315,6 +333,19 @@ sequenceDiagram
 ### 5. 📚 自動進化教訓庫 (Lesson Learnt Registry)
 人會犯錯，AI 也會。但這個系統「不會犯第二次錯」。
 每次遇到 BUG 或架構問題，系統會自動歸納成「防呆 SOP」，並永久寫入專案基因 (`lessons_learned.md`)。未來的新任務都會強制讀取這些教訓，讓專案越做越穩！
+
+### 6. 📝 日誌與追溯機制 (Logging & Observability)
+專案配備了專屬的 **Log Agent (日誌與觀測代理人)**，它不寫程式，只負責監控團隊的健康度並將紀錄儲存：
+* **指標化日誌 (Pointer-Based Logging)**：為防止大腦記憶體超載或外洩機密，主日誌絕對**不紀錄**冗長程式碼、原始錯誤堆疊 (Stack Trace) 或敏感金鑰。詳細的錯誤會被封裝在獨立的 Markdown 報告中 (如 `/dqa_reports/bug_123.md`)，主日誌只會留下簡短摘要與檔案超連結。
+* **主要紀錄檔案位置**：
+  * 📜 **主編年史**：`Logs/Master_Log.md` (記錄每次 Milestone 完成、失敗退件、或 CEO 簽核的關鍵節點，並附帶紅綠燈儀表板與花費估算)。
+  * 🧠 **記憶壓縮檔**：`PM/Memory/M<N>_Digest.md` (由 PM 在每次 Milestone 結束後產出的 800 字以內摘要，避免大腦幻覺)。
+  * 📖 **全局教訓庫**：`.agents/lessons_learned/global_lesson_learn.md` (由系統自動萃取的所有踩坑教訓，成為後續開發的強制規則)。
+
+### 7. 💾 自動備份與收工存檔機制 (Auto-Backup & Save)
+本系統具備嚴格的檔案保護機制。當您準備結束一天的開發工作 (說出「收工」或準備關閉終端機時)：
+* **全自動無感備份**：每當系統內的任何 Agent 修改了 Plugin 或 Skill 底下的設定檔、腳本或系統提示詞，Agent 都會被全局鐵律強制觸發備份腳本 (`backup_skill.py`)。
+* **CEO 隨時掌握進度**：無需手動執行繁瑣的備份指令，您的每一次修改都會被自動同步到 Personal Skills editor workspace 中，確保知識資產零流失。
 
 ---
 

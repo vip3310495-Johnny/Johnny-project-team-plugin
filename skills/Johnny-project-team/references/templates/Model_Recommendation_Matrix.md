@@ -13,6 +13,8 @@
 | **Engineer** | `agents/engineer.json` | 核心開發者 (本地預設)。負責根據架構圖與 PRD 在 `src/` 中進行具體的程式碼實作。 |  |  | [ ] |
 | **TDD DQA** | `agents/tdd_dqa.json` | 理科品管。負責撰寫單元/E2E測試，嚴格審查極端邊界，並確保覆蓋率。 |  |  | [ ] |
 | **SDD DQA** | `agents/sdd_dqa.json` | 文科品管。負責核對實作是否符合 PRD 業務邏輯，並進行 UI/UX 視覺對齊與無障礙審查。 |  |  | [ ] |
+| **Security DQA** | `agents/security_dqa.json` | 資安品管 (外掛)。負責高敏感功能之漏洞掃描、供應鏈盤點與越權防護，需手動喚醒。 |  |  | [ ] |
+| **Log Agent** | `agents/log_agent.json` | 日誌與觀測代理人。負責系統健康度遙測、繪製儀表板與提取教訓。 |  |  | [ ] |
 | **Claude DQA** | 外部終端機 (`claude` CLI) | 外部獨立審查員 (非本地預設)。透過不同模型架構進行防偽與交叉驗證抓漏。 |  |  | [ ] |
 
 ---

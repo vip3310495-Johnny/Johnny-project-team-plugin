@@ -28,6 +28,11 @@
 1. **DQA 靜態審查 (Static Review)**：PM 指示 DQA 讀取對應語言的 Reviewer (位於 `references/ecc_agents/`，例如 `react-reviewer.md`、`python-reviewer.md`、`go-reviewer.md`)，對交接的程式碼進行靜態抓漏。若有架構問題直接退回。
 2. **TE 平行驗證 (Parallel Verification)**：當 DQA 盤點發現測試案例 $\le$ 5 個時，由 DQA 自行執行；若 $> 5$ 個，DQA 必須指揮 PM 喚醒多名 TE 進行平行驗證。**(注意：TE 必須嚴格遵守 `references/te-persona.md` 的禁令，禁止自己改 Code，只能將 JSON 報告交還給 DQA 彙整)**。
 3. **DQA Test Stalemate**：DQA 必須保證自己的腳本無語法錯誤。若修復腳本失敗超過 3 次，視為 Test Stalemate，交由 PM 處理。
+
+## 3.5 DQA 狀態重置 (DQA Reset) [CRITICAL]
+- 在每輪正式的 DQA 審查開始前，PM 必須強制在終端機執行：
+  `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --reset`
+- 確保上一輪的綠燈記錄被清空，防止 Engineer 鑽漏洞沿用舊的 PASS 狀態。
 4. **TDD DQA 第一關 (理科把關)**：
    - 確保測試 100% 通過且覆蓋率達 80%。
    - 使用 `references/dqa-analysis.md` 核對靜默錯誤、記憶體洩漏等易錯點。
@@ -35,6 +40,8 @@
    - TDD DQA 必須且只能透過 Docker 容器來掛載執行測試指令，將所有潛在破壞行為 (爆炸半徑) 封死在虛擬貨櫃內。
      - *指令範例*：`docker run --rm -v ${PWD}:/app -w /app node:18 npm test` 或 `docker run --rm -v ${PWD}:/app -w /app python:3.9 pytest`
    - 若失敗，亮紅燈 (RED LIGHT) 直接退回。
+   - **【強制打卡】**若測試全數通過，TDD DQA 必須在終端機執行：
+     `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --role TDD --status PASS`
 5. **SDD DQA 第二關 (文科把關)**：
    - TDD 通過後，SDD 進行視覺對齊、A11y (無障礙) 審查與業務邏輯驗證。
    - **【規格合規性確認】**：SDD DQA 必須貫徹「SDD 開發精神」，嚴格比對產品實作是否 100% 吻合**全局 PRD** 與 **Milestone 細部開發計畫書**。若有任何遺漏或實作與 Spec 描述不符之處，立即退回。
@@ -46,6 +53,8 @@
        - `gstack` 未安裝 → 改用 `generate_image` 截取畫面 + 視覺分析能力進行 UI 審查。
        - `omniparser` 未安裝 → 改用目視比對方式審查 UI 對齊與破版，並在報告中註明「未使用自動化 UI 解析」。
    - **【邊緣狀態與微交互 (Vibe Review)】**：針對前端/UI 專案，SDD DQA 必須無情獵殺缺乏「Loading 狀態」、「無資料 (Empty) 狀態」與「Error 狀態」的裸奔畫面；並確保所有按鈕與連結都具備符合高質感 (Vibe) 的 Hover/Active 微動畫回饋。
+   - **【強制打卡】**若測試全數通過，SDD DQA 必須在終端機執行：
+     `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --role SDD --status PASS`
 
 6. **Claude Code DQA 第三關 (外部獨立核查) [強制]**：
    - **【不可跳過與嚴禁造假 (Anti-Fake Claude)】**：當本地的 TDD 與 SDD DQA 都給予綠燈後，PM **必須且只能**透過 `run_command` 工具在終端機呼叫 `scripts/claude_dqa_hook.py` (或是直接執行 `npx @anthropic-ai/claude-code`) 來喚醒外部的 Anthropic Claude 進行獨立審查。
@@ -102,11 +111,16 @@
 - **FAIL 狀態**：嚴格紀錄「退件原因(Root Cause)」、「Token 浪費點」與「流程偏離情況」。
 - 注意：跳轉閘門會檢查 Log 更新時間，沒跑 Log Agent 絕對不准進入下一階段！
 
+## 8.9 DQA 三重鎖定檢查 (Triple-Lock Clearance) [CRITICAL]
+- **【物理鎖死】**在向 CEO 請求 `/approve` 前，PM **必須且只能**強制執行以下腳本：
+  `python .agents/skills/Johnny-project-team/scripts/verify_all_dqa_passed_hook.py`
+- 若該腳本回傳失敗 (代表 TDD、SDD 或 Claude 其中有漏掉或未通過)，PM **絕對禁止**向 CEO 發送 `/approve` 請求，必須退回補齊所有測試。
+
 ## 9. 狀態跳轉與簽核 (Phase Gate Execution)
-在完成視覺化報告產出後，PM 必須執行以下跳轉授權流程：
-1. **主動請求簽核**：PM 必須向 CEO 說明：「本次 Milestone 的視覺化報告與測試結果皆已出爐。請您檢視，若同意請輸入 `/approve`，我們將進行後續的跳轉。」
+在完成視覺化報告產出與 **DQA 三重鎖定檢查** 後，PM 必須執行以下跳轉授權流程：
+1. **主動請求簽核**：PM 必須向 CEO 說明：「本次 Milestone 的 DQA 三重防線已全數通過，視覺化報告已出爐。請您檢視，若同意請輸入 `/approve`，我們將進行後續的跳轉。」
 2. **執行階段閘門**：取得 CEO 的 `/approve` 指令後，PM 必須執行：
-   `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 3 --to_phase <目標階段> --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
+   `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 3 --to_phase <目標階段> --milestone <M編號> --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
 3. **跳轉方向**：
    - 檢視 `PM/PRD.md` 中的 Milestone 清單。
    - 若**還有未完成的 Milestone** ➔ 目標階段設為 `1`，腳本放行後跳回 **Phase 1 (Milestone Detailed Planning)** 開始拆解下一個任務。

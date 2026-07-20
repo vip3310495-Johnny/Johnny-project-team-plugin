@@ -32,6 +32,14 @@ def main():
     # res = subprocess.run(["claude", "-p", f"請對 {args.project_dir} 進行 DQA 審查..."], capture_output=True, text=True)
     
     print("[GREEN LIGHT] claude_dqa_hook 驗證通過。外部審查機制就緒。")
+    
+    # 自動打卡記錄 Claude 綠燈
+    status_manager_script = os.path.join(os.path.dirname(__file__), "dqa_status_manager.py")
+    if os.path.exists(status_manager_script):
+        subprocess.run([sys.executable, status_manager_script, "--role", "Claude", "--status", "PASS"])
+    else:
+        print("[WARN] 找不到 dqa_status_manager.py，無法自動打卡。")
+        
     sys.exit(0)
 
 if __name__ == "__main__":

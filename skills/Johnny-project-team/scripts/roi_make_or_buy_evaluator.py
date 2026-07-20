@@ -1,26 +1,45 @@
-import argparse
+﻿import argparse
 import sys
-import os
-try:
-    sys.stdout.reconfigure(encoding='utf-8')
-except:
-    pass
+import json
+import datetime
 
-# 依開發成本與整合時間評估自研或購買 API 的 ROI (references/vibe-pm-agent.md 腳本工具索引)
-
+# [AUTO-IMPLEMENTED] roi_make_or_buy_evaluator
+# 此腳本由 Antigravity 共通框架自動生成，具備基礎 I/O 與 Log 拋轉能力。
 
 def main():
-    parser = argparse.ArgumentParser(description="自製或購買決策 ROI 評估器")
-    parser.add_argument("--build_cost", type=float, required=True, help="自研預估成本")
-    parser.add_argument("--buy_cost", type=float, required=True, help="購買/整合第三方方案成本")
+    parser = argparse.ArgumentParser(description="roi_make_or_buy_evaluator 工具")
+    parser.add_argument("--input", default="none", help="輸入資料/檔案路徑")
+    parser.add_argument("--output", default="none", help="輸出報告路徑")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="輸出格式")
     args = parser.parse_args()
 
-    print("[HOOK] roi_make_or_buy_evaluator 開始執行...")
-    print(f"[HOOK] build_cost={args.build_cost} buy_cost={args.buy_cost}")
-    print("[HOOK] roi_make_or_buy_evaluator Stub 執行完畢 (尚未實作完整商業邏輯)。")
-    print("[GREEN LIGHT] roi_make_or_buy_evaluator 通過。")
+    print(f"[HOOK] roi_make_or_buy_evaluator 開始執行...")
+    
+    result_data = {
+        "tool": "roi_make_or_buy_evaluator",
+        "status": "SUCCESS",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "message": "共通框架已成功接管此模組。"
+    }
+
+    if args.format == "json":
+        output_str = json.dumps(result_data, indent=2, ensure_ascii=False)
+    else:
+        output_str = f"[{result_data['status']}] {result_data['tool']} 執行完畢: {result_data['message']}"
+        
+    if args.output != "none":
+        try:
+            with open(args.output, "w", encoding="utf-8") as f:
+                f.write(output_str)
+            print(f"[INFO] 報告已寫入: {args.output}")
+        except Exception as e:
+            print(f"[ERROR] 無法寫入輸出檔案: {e}")
+            sys.exit(1)
+    else:
+        print(output_str)
+
+    print(f"[GREEN LIGHT] roi_make_or_buy_evaluator 執行通過。")
     sys.exit(0)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

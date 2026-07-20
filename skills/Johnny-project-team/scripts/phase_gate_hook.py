@@ -18,10 +18,11 @@ def main():
     parser.add_argument("--ceo_signature", default=None, help="CEO 簽核指令，例如 /approve")
     parser.add_argument("--prd_path", default=None, help="對應的 PRD 或 Milestone_PRD.md 路徑")
     parser.add_argument("--auto", action="store_true", help="是否為全自動模式 (/goal)")
+    parser.add_argument("--milestone", default=None, help="Milestone 編號 (例如 M1)")
     args = parser.parse_args()
 
     print("[HOOK] phase_gate_hook 開始執行...")
-    print(f"[HOOK] from_phase={args.from_phase} to_phase={args.to_phase}")
+    print(f"[HOOK] from_phase={args.from_phase} to_phase={args.to_phase} milestone={args.milestone}")
     print(f"[HOOK] ceo_signature={args.ceo_signature} auto={args.auto} prd_path={args.prd_path}")
 
     # 1. 驗證實際階段與聲稱階段是否相符 (防造假跳關)
@@ -41,10 +42,29 @@ def main():
             print(f"[FAIL] 拒絕存取：找不到產出物 {args.prd_path}。")
             sys.exit(1)
         mtime = os.path.getmtime(args.prd_path)
-        # 若檔案修改時間超過 7 天，視為「非當前 Milestone 產物」而退件
+        # 方案 A 升級：移除不合理的 7 天效期限制，改為溫馨提醒以避免長時間 Milestone 卡死
         if time.time() - mtime > 7 * 24 * 3600:
-            print(f"[FAIL] 拒絕存取：產出物 {args.prd_path} 過於老舊 (超過 7 天)，請確保您提交的是本階段最新鮮的產出！")
+            print(f"💡 [WARN] 提醒：產出物 {args.prd_path} 距離上次修改已超過 7 天，請確認這是否是本階段最新鮮的產出。")
+
+    # 2.5 Phase 3 專屬跳轉檢查 (Visual Report Gatekeeper)
+    if args.from_phase == "3":
+        if not args.milestone:
+            print("[FAIL] 拒絕存取：從 Phase 3 跳轉必須提供 --milestone 參數 (例如 M1)。")
             sys.exit(1)
+            
+        sys_flow_path = os.path.join("PM", f"{args.milestone}_System_Flow.md")
+        data_flow_path = os.path.join("PM", f"{args.milestone}_Data_Flow.md")
+        
+        missing_reports = []
+        for path in [sys_flow_path, data_flow_path]:
+            if not os.path.exists(path) or os.path.getsize(path) < 100:
+                missing_reports.append(path)
+                
+        if missing_reports:
+            print(f"[FAIL] 拒絕存取：找不到必備的視覺化報告，或檔案過小。缺失清單：{missing_reports}")
+            sys.exit(1)
+            
+        print(f"💡 [WARN] 請 PM 再次確認圖面 ({sys_flow_path}, {data_flow_path}) 正確無誤，是否已完全與剛通過 DQA 的最新程式碼現狀相符？")
 
     # 3. 驗證 CEO 簽核
     if not args.auto:

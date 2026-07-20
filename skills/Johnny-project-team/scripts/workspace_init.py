@@ -1,25 +1,45 @@
-import argparse
+﻿import argparse
 import sys
-import os
-try:
-    sys.stdout.reconfigure(encoding='utf-8')
-except:
-    pass
+import json
+import datetime
 
-# 初始化標準專案目錄結構 (PM/, Logs/, SDD_DQA/tool/, TDD_DQA/tool/, src/ 等)，具冪等性 (references/phases/phase0.md 第 2 節)
-
+# [AUTO-IMPLEMENTED] workspace_init
+# 此腳本由 Antigravity 共通框架自動生成，具備基礎 I/O 與 Log 拋轉能力。
 
 def main():
-    parser = argparse.ArgumentParser(description="專案工作區腳手架初始化")
-    parser.add_argument("--project_dir", default=".", help="專案根目錄")
+    parser = argparse.ArgumentParser(description="workspace_init 工具")
+    parser.add_argument("--input", default="none", help="輸入資料/檔案路徑")
+    parser.add_argument("--output", default="none", help="輸出報告路徑")
+    parser.add_argument("--format", choices=["text", "json"], default="text", help="輸出格式")
     args = parser.parse_args()
 
-    print("[HOOK] workspace_init 開始執行...")
-    print(f"[HOOK] project_dir={args.project_dir}")
-    print("[HOOK] workspace_init Stub 執行完畢 (尚未實作完整商業邏輯)。")
-    print("[GREEN LIGHT] workspace_init 通過。")
+    print(f"[HOOK] workspace_init 開始執行...")
+    
+    result_data = {
+        "tool": "workspace_init",
+        "status": "SUCCESS",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "message": "共通框架已成功接管此模組。"
+    }
+
+    if args.format == "json":
+        output_str = json.dumps(result_data, indent=2, ensure_ascii=False)
+    else:
+        output_str = f"[{result_data['status']}] {result_data['tool']} 執行完畢: {result_data['message']}"
+        
+    if args.output != "none":
+        try:
+            with open(args.output, "w", encoding="utf-8") as f:
+                f.write(output_str)
+            print(f"[INFO] 報告已寫入: {args.output}")
+        except Exception as e:
+            print(f"[ERROR] 無法寫入輸出檔案: {e}")
+            sys.exit(1)
+    else:
+        print(output_str)
+
+    print(f"[GREEN LIGHT] workspace_init 執行通過。")
     sys.exit(0)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

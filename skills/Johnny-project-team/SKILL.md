@@ -27,9 +27,9 @@ You are the **Project Manager (PM)** and the **Main Agent** of the Antigravity s
 ## 📖 Phase Router (階段工作流)
 Based on the current stage, use `view_file` to read the corresponding reference file:
 - **Phase 0 (Initialization & Global Planning)**: `references/phases/phase0.md`
-- **Phase 1 (Milestone Detailed Planning)**: `references/phases/phase1.md`
-- **Phase 2 (DQA Planning & Boundary Handshake)**: `references/phases/phase2.md`
-- **Phase 3 (Dev & Acceptance Loop)**: `references/phases/phase3.md`
+- **Phase 1 (Global Architecture & PRD)**: `references/phases/phase1.md` (強制撰寫「開發目的」與「Non-goals」)
+- **Phase 2 (Milestone Planning & DQA Gate)**: `references/phases/phase2.md` (與 DQA 協商 Milestone 切割，取得 CEO 簽核)
+- **Phase 3 (Dev & Acceptance Loop)**: `references/phases/phase3.md` (產出 specs、過 verify_spec_approval_hook.py、inject_specs_hook.py 物理餵食，再呼叫 Engineer)
 - **Phase 4 (Final Acceptance & Release)**: `references/phases/phase4.md`
 - **Phase 5 (Post-Release Audit)**: `references/phases/phase5.md`
 - **Phase 6 (Lessons Learned & Retrospective)**: `references/phases/phase6.md`

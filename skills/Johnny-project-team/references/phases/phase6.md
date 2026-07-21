@@ -4,7 +4,7 @@
 當專案被 CEO 宣告結案、停止維護，或是準備移交給其他 (人類或其他 AI) 團隊時，PM 必須執行本階段的退場程序，以確保知識遺產的完整保留，並乾淨俐落地釋放所有資源。
 
 ## 1. 知識庫終極封裝 (Knowledge Archiving)
-- PM 必須搜集所有存在 `Logs/lesson_learnt_registry.md` 中的血淚史。
+- PM 必須搜集所有存在 `.agents/lessons_learned/DIGEST.md` 中的血淚史。
 - PM 必須閱讀最新的架構文件與 API 規格。
 - PM 負責將上述所有知識，統整輸出為一份人類高度友善的 `Project_Handover_Manual.md` (專案交接手冊)。這份手冊必須能讓任何接手的新工程師，在 1 小時內完全了解系統架構與曾踩過的坑。
 

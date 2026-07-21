@@ -37,30 +37,31 @@ graph TD
 
     %% Phases
     Start((開始專案)) --> P0["Phase 0: 戰略定義<br/>(初始化大腦 / 載入舊 Context)"]:::phase
-    P0 -- "/approve" --> P1["Phase 1: 架構設計與微觀規劃<br/>(產出 PRD 與架構設計)"]:::phase
-    P1 -- "/approve" --> P2["Phase 2: DQA 進場與邊界規劃<br/>(產出測試計畫)"]:::phase
+    P0 -- "/approve" --> P1["Phase 1: 總體架構設計<br/>(產出帶有開發目的與 Non-goals 的 PRD)"]:::phase
+    P1 -- "/approve" --> P2["Phase 2: Milestone 切割與 DQA 審查<br/>(DQA 守門與合理性檢核)"]:::phase
     
-    P2 --> Policy["產生 org_security_policy.json<br/>(AgentShield 基準)"]:::security
-    Policy -- "/approve" --> Eng
+    P2 -- "/approve" --> P3Enter
     
     subgraph P3 ["Phase 3: 實作與封裝核心迴圈"]
         direction TB
-        Eng[Engineer Agent 開發]:::agent --> Shield{"AgentShield Hook<br/>(攔截危險指令/密碼)"}:::security
+        P3Enter[PM 產出小 PRD] --> DQA_Spec["DQA 撰寫測試合約<br/>(產出帶 TO-DO 的 specs/)"]:::agent
+        DQA_Spec -- "CEO /approve<br/>(verify_spec_approval_hook)" --> Inject["物理餵食 Hook<br/>(inject_specs_hook)"]:::ecc
+        Inject --> Eng[Engineer Agent 開發]:::agent
+        Eng --> Shield{"AgentShield Hook<br/>(攔截危險指令/密碼)"}:::security
         Shield -- 失敗 (Autofix) --> Eng
         Shield -- 通過 --> Smoke[工程師自檢編譯]
-        Smoke --> Queue[單線程審查佇列]
-        Queue --> TDD["TDD DQA 第一關<br/>極端測試/覆蓋率"]:::agent
-        TDD -- 退回 --> Eng
-        TDD -- 通過 --> SDD["SDD DQA 第二關<br/>體驗與業務邏輯"]:::agent
-        SDD -- 退回 --> Eng
-        SDD -- 通過 --> Claude["Claude DQA 第三關<br/>(外部獨立審查)"]:::agent
+        Smoke --> TDD["TDD DQA 第一關<br/>極端測試/覆蓋率"]:::agent
+        TDD -- 通過 --> SDD["SDD DQA 第二關<br/>(情境逐條驗收)"]:::agent
+        SDD -- 通過 --> CheckSpecs{"DQA 驗收防呆<br/>(verify_dqa_checklist_hook)"}:::ecc
+        CheckSpecs -- "[ ] 未打勾退回" --> SDD
+        CheckSpecs -- "[x] 全部打勾" --> Claude["Claude DQA 第三關<br/>(外部獨立審查)"]:::agent
         Claude -- 退回 --> Eng
         Claude -- 通過 --> Merge(合併代碼與大腦清洗)
     end
     
     Merge --> CheckMilestone{"Milestones<br/>全部完成?"}
-    CheckMilestone -- 否 (進入下一個任務) --> P1
-    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 成品驗收階段<br/>(實機盲測與自動上線)"]:::phase
+    CheckMilestone -- 否 (進入下一個任務) --> P3Enter
+    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 成品驗收階段<br/>(SDD 覆核初版開發目的)"]:::phase
     
     P4 -- "/approve" --> P5[Phase 5: 產品上線後維護]:::phase
     P5 -- "宣告結案" --> P6[Phase 6: 專案封裝與退場]:::phase
@@ -72,7 +73,7 @@ graph TD
         Propose --> VerifyHook{verify_lesson_hook.py}:::ecc
         VerifyHook --> Subagent["Lesson Verifier 子代理人<br/>(檢驗通用性)"]:::agent
         Subagent -- "[REJECTED] (累積5次呼叫 CEO)" --> Propose
-        Subagent -- [APPROVED] --> DB[("全球知識庫<br/>lessons_learned.md")]
+        Subagent -- [APPROVED] --> DB[("全球知識庫<br/>.agents/lessons_learned/DIGEST.md")]
     end
     
     %% Connections for Learning
@@ -121,7 +122,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary><b>Phase 1: 架構設計與微觀規劃 (點擊展開)</b></summary>
+<summary><b>Phase 1: 總體架構設計 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -129,88 +130,90 @@ sequenceDiagram
     participant Arch as 架構師 (Architect)
     participant CEO
     
-    PM->>PM: 鎖定當前 Milestone 並撰寫細部 PRD
-    PM->>Arch: 交付 Milestone PRD 請求微觀架構設計
+    PM->>PM: 撰寫全局 PRD (強制包含 開發目的 與 Non-goals)
+    PM->>Arch: 交付 PRD 請求架構設計
     Arch->>Arch: 設計資料結構、API 規格與元件樹
     Arch->>PM: 產出 System Architecture
     PM->>PM: 在 PRD 底部加入授權簽核區塊
-    PM->>CEO: 報告細部規劃與潛在風險，請求授權
+    PM->>CEO: 報告總體規劃與潛在風險，請求授權
     CEO-->>PM: /approve 簽核
-    PM->>PM: 執行 phase_gate_hook.py 驗證跳轉
+    PM->>PM: 執行 phase_gate_hook.py 驗證跳轉進入 Phase 2
 ```
 </details>
 
 <details>
-<summary><b>Phase 2: DQA 進場與邊界規劃 (點擊展開)</b></summary>
+<summary><b>Phase 2: Milestone 切割與 DQA 審查 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
-    participant Arch as 架構師
-    participant SDD as SDD DQA (文科)
-    participant TDD as TDD DQA (理科)
+    participant SDD as SDD DQA
+    participant TDD as TDD DQA
     participant CEO
     
-    PM->>SDD: 交付 Milestone PRD 與開發邊界
-    SDD->>SDD: 規格守門 (規格模糊則發動退件權)
-    SDD-->>PM: 規格合格，簽核同意
+    PM->>PM: 進行小 Milestone 切割與規劃
+    PM->>SDD: 交付 Milestone 規劃
+    PM->>TDD: 交付 Milestone 規劃
     
-    PM->>TDD: 交付架構藍圖
-    par 測試策略與工具準備 (繼承知識庫)
-        TDD->>TDD: 產出極端邊界測試計畫與 Mock Data
-        SDD->>SDD: 產出體驗與邏輯驗證計畫
+    par 守門員審查 (不寫測試代碼，只看合理性)
+        SDD->>SDD: 審查 Milestone 是否過大或難以驗收
+        TDD->>TDD: 審查產出是否具備可測試性
     end
-    TDD-->>PM: 提交自動化測試工具
-    SDD-->>PM: 提交自動化測試工具
-    PM->>PM: 行使否決權審核測試邊界 (防越界)
     
-    PM->>Arch: 共同擬定 org_security_policy.json (防爆政策)
-    Arch-->>PM: 實體安全護欄建立完畢
+    alt 發現問題
+        SDD-->>PM: 提出修改建議與衝突
+        PM->>PM: 整理衝突選項
+        PM->>CEO: 報告衝突並提供選項讓 CEO 決策
+        CEO-->>PM: 做出決策
+    else 審查無誤
+        SDD-->>PM: 同意 Milestone 切割
+    end
     
-    PM->>CEO: 測試防線與安全防護就緒，請求放行
+    PM->>CEO: 呈交確認後的 Milestone 流程圖與資料流向圖
     CEO-->>PM: /approve 簽核
-    PM->>PM: 執行 phase_gate_hook.py 進入開發階段
+    PM->>PM: 執行 phase_gate_hook.py 進入 Phase 3 開發迴圈
 ```
 </details>
 
 <details>
-<summary><b>Phase 3: 實作與封裝 (點擊展開)</b></summary>
+<summary><b>Phase 3: 實作與封裝核心迴圈 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
+    participant DQA as 品管 (TDD/SDD)
+    participant CEO
+    participant Hook as 實體 Hooks
     participant ENG as 工程師 (Engineer)
-    participant Guard as 物理防爆沙盒
-    participant TDD as TDD DQA (理科)
-    participant SDD as SDD DQA (文科)
-    participant CDQA as Claude DQA (外部審查)
     
-    PM->>ENG: 發包實作任務
+    PM->>PM: 產出小 Milestone 細部 PRD
+    PM->>DQA: 要求撰寫測試合約 (Intent Contract)
+    DQA->>DQA: 產出 specs/sdd_spec.md 與 tdd_spec.md (強制包含 Markdown TO-DO `[ ]`)
+    DQA-->>PM: 提交 specs
+    
+    PM->>CEO: 呈交 specs，請求放行
+    CEO-->>PM: /approve 簽核
+    
+    PM->>Hook: 觸發 verify_spec_approval_hook.py
+    Hook-->>PM: 簽核確認通過
+    
+    PM->>Hook: 觸發 inject_specs_hook.py
+    Hook->>ENG: 物理性強制灌入 specs 至 Agent 大腦
+    
     loop 寫扣與自我修正
-        ENG->>Guard: 嘗試寫入代碼 (src/)
-        Guard-->>ENG: 攔截越權或允許寫入
+        ENG->>ENG: 根據 specs 開發與編譯
     end
     ENG->>PM: 提交交接報告
     
-    rect rgb(240, 248, 255)
-        note right of PM: 🛡️ 三重品管防線 (DQA Pipeline)
-        PM->>TDD: 請求 TDD 審核 (Docker 沙盒測試)
-        alt 測試失敗
-            TDD-->>ENG: 亮紅燈，退回要求 RCA 與重寫
-        else TDD 通過
-            PM->>SDD: 請求 SDD 審核 (UI 與商業邏輯)
-            alt 規格不符或破版
-                SDD-->>ENG: 亮紅燈，退回要求重寫
-            else SDD 通過
-                PM->>CDQA: 呼叫外部 Claude CLI 最終抓漏
-                alt 外部審查失敗
-                    CDQA-->>ENG: 亮紅燈，退回要求重寫
-                else 全數通過
-                    CDQA-->>PM: 🟢 All Clear
-                    PM->>PM: 進入 Phase 4 或下個 Milestone
-                end
-            end
-        end
+    PM->>DQA: 請求驗收
+    DQA->>DQA: 根據 specs 情境逐條驗收並打勾 `[x]`
+    DQA->>Hook: 觸發 verify_dqa_checklist_hook.py
+    alt 有項目未勾選 `[ ]`
+        Hook-->>DQA: 亮紅燈，退件禁止提交
+        DQA->>ENG: 退回要求工程師修正
+    else 全數勾選 `[x]`
+        Hook-->>PM: 綠燈放行
+        PM->>PM: 進入 Phase 4 或下個 Milestone
     end
 ```
 </details>
@@ -226,14 +229,8 @@ sequenceDiagram
     participant CEO
     
     PM->>DQA: 發動全局整合測試與套件收斂
-    DQA->>DQA: 驗證跨模組整合 Bug
-    DQA->>PM: 測試通過 (Green Light)
-    
-    PM->>Arch: 喚醒架構師進行最終覆核
-    Arch->>Arch: 盤點架構偏移與依賴膨脹
-    Arch->>PM: 產出 Final_Architecture_Audit.md
-    
-    Note over PM,Arch: 必須達成全票同意 (All-Agree) 才能推進
+    DQA->>DQA: SDD DQA 根據 Phase 1 的「開發目的」進行最終覆核
+    DQA->>PM: 測試與覆核通過 (Green Light)
     
     PM->>CEO: 交付執行檔 / 網站連結進行「實機盲測」
     alt CEO 發現致命錯誤
@@ -258,7 +255,7 @@ sequenceDiagram
     participant KB as 教訓知識庫
     CEO->>PM: 詢問架構細節 / 提出新功能需求
     PM->>Arch: 請求架構師回顧 System Architecture
-    Arch->>KB: 查閱 As-Built Architecture 與 lessons_learned.md
+    Arch->>KB: 查閱 As-Built Architecture 與 .agents/lessons_learned/DIGEST.md
     Arch->>PM: 提供現有架構分析與擴充建議
     PM->>CEO: 解答問題 (化身活體知識庫)
     opt 若為新功能需求
@@ -330,12 +327,12 @@ sequenceDiagram
 ### 4. 🧰 內建擴充技能包 (Built-in Skills)
 除了專案經理主技能外，Plugin 還內建了多個強大的輔助技能，全方位強化專案體質：
 * **Claude 外包指揮官 (`claude-executor-orchestrator`)**：能把 Claude Code CLI 當成外包部隊指揮。當有繁雜的實作任務時，PM 會把任務打包外包給 Claude，並強制產出交接報告。
-* **知識庫守門員 (`lesson-maintainer`)**：定期整理、去重與淘汰教訓庫 (`lessons_learned.md`)，並將高頻教訓自動升級為組織的強制規則。
+* **知識庫守門員 (`lesson-maintainer`)**：定期整理、去重與淘汰教訓庫 (`.agents/lessons_learned/DIGEST.md`)，並將高頻教訓自動升級為組織的強制規則。
 * **全局基因防線 (`team-constitution`)**：每當任何代理人被喚醒時，自動且強制為其加載組織鐵律，確保整個團隊的思想與行為高度一致。
 
 ### 5. 📚 自動進化教訓庫 (Lesson Learnt Registry)
 人會犯錯，AI 也會。但這個系統「不會犯第二次錯」。
-每次遇到 BUG 或架構問題，系統會自動歸納成「防呆 SOP」，並永久寫入專案基因 (`lessons_learned.md`)。未來的新任務都會強制讀取這些教訓，讓專案越做越穩！
+每次遇到 BUG 或架構問題，系統會自動歸納成「防呆 SOP」，並永久寫入專案基因 (`.agents/lessons_learned/DIGEST.md`)。未來的新任務都會強制讀取這些教訓，讓專案越做越穩！
 
 ### 6. 📝 日誌與追溯機制 (Logging & Observability)
 專案配備了專屬的 **Log Agent (日誌與觀測代理人)**，它不寫程式，只負責監控團隊的健康度並將紀錄儲存：
@@ -343,7 +340,7 @@ sequenceDiagram
 * **主要紀錄檔案位置**：
   * 📜 **主編年史**：`Logs/Master_Log.md` (記錄每次 Milestone 完成、失敗退件、或 CEO 簽核的關鍵節點，並附帶紅綠燈儀表板與花費估算)。
   * 🧠 **記憶壓縮檔**：`PM/Memory/M<N>_Digest.md` (由 PM 在每次 Milestone 結束後產出的 800 字以內摘要，避免大腦幻覺)。
-  * 📖 **全局教訓庫**：`.agents/lessons_learned/global_lesson_learn.md` (由系統自動萃取的所有踩坑教訓，成為後續開發的強制規則)。
+  * 📖 **全局教訓庫**：`.agents/lessons_learned/DIGEST.md` (由系統自動萃取的所有踩坑教訓，成為後續開發的強制規則)。
 
 ### 7. 💾 自動備份與收工存檔機制 (Auto-Backup & Save)
 本系統具備嚴格的檔案保護機制。當您準備結束一天的開發工作 (說出「收工」或準備關閉終端機時)：

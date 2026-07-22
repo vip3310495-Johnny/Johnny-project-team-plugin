@@ -8,7 +8,7 @@
 
 ## `codex/`
 
-Codex 版本（3.2.0），包含：
+Codex 版本（3.2.1），包含：
 
 - Phase 0 Grill-me 引導 CEO 對齊 5W 與希望的設計風格。
 - Approval Ledger、機器可讀狀態、Phase Gate 與 stale 偵測。

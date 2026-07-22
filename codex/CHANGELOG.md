@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-07-23
+
 ### Changed
 
 - Engineer 的程式碼異動範圍限於 `src/` 與 `tests/`，並明確禁止使用 DQA 工具、腳本、Gate 與 Claude DQA CLI；測試執行與品質判定交由 DQA 執行。

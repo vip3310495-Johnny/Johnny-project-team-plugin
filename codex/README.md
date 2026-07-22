@@ -124,6 +124,46 @@ Claude DQA 是外部、唯讀審查節點。Plugin **不會自動呼叫** Claude
 
 ---
 
+## Skill 安裝需求
+
+### 一般使用者
+
+安裝整個 `codex/` Plugin 後，以下 Skill 會隨 Plugin 一起載入，**不需要逐一另外下載或安裝**。在 Codex 介面中，名稱可能會顯示為 `johnny-project-team-plugin:<skill-name>`。
+
+| Skill | 必要性 | 用途 |
+| --- | --- | --- |
+| [`johnny-project-team`](skills/Johnny-project-team/SKILL.md) | **必要，主要入口** | 由目前 Codex task 擔任 PM，管理 Phase 0～6、CEO 核准、Milestone、角色派遣與 Gate。 |
+| [`team-constitution`](skills/team-constitution/SKILL.md) | 建議啟用 | 建立與維護角色責任、協作規則、品質門檻及安全邊界。 |
+| [`codex-executor-orchestrator`](skills/claude-executor-orchestrator/SKILL.md) | 多代理工作時需要 | 把工作拆成 Codex 原生子任務，追蹤、等待、追加或中斷代理工作。 |
+| [`lesson-maintainer`](skills/lesson-maintainer/SKILL.md) | 使用 Lessons Learned 時需要 | 整理、去重與歸納 `.agents/lessons_learned/` 的經驗資料。 |
+| [`claude-dqa`](skills/claude-dqa/SKILL.md) | 選用 | 管理 Phase 3／4 的外部 Claude DQA 唯讀審查及成本核准檢查。 |
+
+### Grill-me 是否需要另外安裝？
+
+不需要。此 Plugin 已把 Grill-me 問答協議內建於 [`grill-me-phase0.md`](skills/Johnny-project-team/references/grill-me-phase0.md)，並由 `johnny-project-team` 在 Phase 0A 路由使用。若環境另外裝有同名 Grill-me Skill，可作為提問輔助，但仍必須遵守本 Plugin 的 5W、Approval Ledger 與 Phase Gate 規則。
+
+### 維護者才需要的 Skill
+
+下列 Skill 只在修改或重新封裝此 Plugin 時使用；一般專案執行不需要：
+
+- `skill-creator`：修改 `SKILL.md`、references 或資源路由時，用於檢查 Skill 結構。
+- `plugin-creator`：修改 `.codex-plugin/plugin.json`、Plugin 目錄或封裝設定時，用於驗證 manifest。
+
+### 外部工具不是 Skill
+
+- **Claude CLI**：選用的外部工具，不會隨 Plugin 安裝。只有 CEO 已建立對應 `external_service_cost` Ledger 核准時才能執行。
+- **Python**：治理腳本的執行環境；優先使用 Codex bundled Python。
+- **Git／Docker／專案測試工具**：只在對應工作流或 DQA 測試命令需要時安裝。
+
+### 安裝後確認
+
+1. 以 `codex/` 為 Plugin 根目錄完成安裝。
+2. 重新開啟一個 Codex task，讓 Plugin 與 Skill 清單重新載入。
+3. 確認至少能看到 `johnny-project-team`；需要多代理、Lessons Learned 或 Claude DQA 時，再確認對應內附 Skill 可用。
+4. 啟動專案時先使用 `johnny-project-team`，讓 PM 從 Phase 0A Grill-me 開始，不要直接跳到 Engineer 或 DQA。
+
+---
+
 ## 安裝與啟動
 
 1. 在 Codex 的 Plugin 管理介面選擇本資料夾 `codex/` 作為 Plugin 根目錄；manifest 位於 `.codex-plugin/plugin.json`。

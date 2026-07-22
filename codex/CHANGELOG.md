@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-07-23
+
 ### Changed
 
 - Phase 3／4 的 DQA 改為強制依序執行 TDD → SDD → Claude，拒絕跳過前置 DQA 或提早執行 Claude。

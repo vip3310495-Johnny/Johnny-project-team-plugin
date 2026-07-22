@@ -21,7 +21,7 @@ description: 以 Codex 原生協作管理多代理開發、CEO 核准、大小 M
 2. `project_state.json` 是唯一權威狀態；每次重要轉換後執行 `render-save-state`。完整事件寫入 JSONL，不以摘要取代歷史。
 3. 核准需要明確 scope、artifact 與 hash；`--auto`、預設同意與模糊核准一律拒絕。任何語意變更後先執行 `refresh`。
 4. Phase 0 必須先依 `references/grill-me-phase0.md` 執行 Grill-me 引導訪談，完成 5W 與設計方向，再進行核准、Architect How、雙 DQA 與獨立 Exit 核准。5W 未核准時不得正式派遣 Architect。
-5. Phase 3 起需要 SDD、TDD、Claude 三重 DQA。Claude 外部 CLI 僅能在使用者同意外部成本後唯讀執行；不可用或未執行即為阻擋。
+5. Phase 3 與 Phase 4 的 DQA 順序固定為 TDD DQA → SDD DQA → Claude DQA；前一項未 PASS 不得開始下一項。Claude 外部 CLI 僅能在使用者同意外部成本後唯讀執行；不可用或未執行即為阻擋。
 6. DQA 自行執行測試、蒐集證據並做出 PASS 或 FAIL 判定；不得再分派測試給額外的測試代理。
 7. Phase 3／4 合併唯一測試項目上限分別為 30／50；超限保留完整測試，但必須取得 PM 的 `phase_test_expansion` 核准。
 

@@ -42,6 +42,32 @@ def test_phase3_blocks_without_claude_evidence(tmp_path):
     assert "BLOCKED" in result.stdout
 
 
+def test_phase3_dqa_status_requires_tdd_sdd_claude_order(tmp_path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    result = run(STATUS_MANAGER, project_dir, "--role", "SDD", "--status", "PASS")
+    assert result.returncode == 1
+    assert "TDD" in result.stdout
+    assert run(STATUS_MANAGER, project_dir, "--role", "TDD", "--status", "PASS").returncode == 0
+    result = run(STATUS_MANAGER, project_dir, "--role", "Claude", "--status", "PASS")
+    assert result.returncode == 1
+    assert "SDD" in result.stdout
+    assert run(STATUS_MANAGER, project_dir, "--role", "SDD", "--status", "PASS").returncode == 0
+    assert run(STATUS_MANAGER, project_dir, "--role", "Claude", "--status", "PASS").returncode == 0
+
+
+def test_phase4_dqa_status_requires_tdd_sdd_claude_order(tmp_path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    status_file = ".agents/.phase4_dqa_status.json"
+    result = run(STATUS_MANAGER, project_dir, "--status_file", status_file, "--role", "SDD", "--status", "PASS")
+    assert result.returncode == 1
+    assert "TDD" in result.stdout
+    assert run(STATUS_MANAGER, project_dir, "--status_file", status_file, "--role", "TDD", "--status", "PASS").returncode == 0
+    assert run(STATUS_MANAGER, project_dir, "--status_file", status_file, "--role", "SDD", "--status", "PASS").returncode == 0
+    assert run(STATUS_MANAGER, project_dir, "--status_file", status_file, "--role", "Claude", "--status", "PASS").returncode == 0
+
+
 def test_phase4_blocks_without_claude_evidence(tmp_path):
     project_dir = tmp_path / "project"
     project_dir.mkdir()

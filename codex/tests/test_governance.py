@@ -198,6 +198,17 @@ class GovernanceTests(unittest.TestCase):
             self.assertFalse((project / ".agents/project_state.json").exists())
             self.assertFalse((project / "PM/Approval_Ledger.json").exists())
 
+    def test_24_phase3_dqa_requires_tdd_sdd_claude_order(self) -> None:
+        reports = {}
+        for role in ("TDD", "SDD", "Claude"):
+            report = self.write(f"{role}_DQA/phase3.json", "{}")
+            reports[role] = report.relative_to(self.project).as_posix()
+        self.invoke("set-dqa", "--phase", "3", "--role", "SDD", "--status", "PASS", "--report", reports["SDD"], expected=1)
+        self.invoke("set-dqa", "--phase", "3", "--role", "TDD", "--status", "PASS", "--report", reports["TDD"])
+        self.invoke("set-dqa", "--phase", "3", "--role", "Claude", "--status", "PASS", "--report", reports["Claude"], expected=1)
+        self.invoke("set-dqa", "--phase", "3", "--role", "SDD", "--status", "PASS", "--report", reports["SDD"])
+        self.invoke("set-dqa", "--phase", "3", "--role", "Claude", "--status", "PASS", "--report", reports["Claude"])
+
     def write_for(self, project: Path, relative: str, text: str) -> Path:
         path = project / relative
         path.parent.mkdir(parents=True, exist_ok=True)

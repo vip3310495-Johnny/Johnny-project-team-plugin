@@ -43,8 +43,8 @@ flowchart TD
 | 0C | SDD DQA、TDD DQA 驗證 5W1H、風險、可測試性與可觀測性。 | `PHASE0_EXIT` |
 | 1 | 整理產品範圍、Non-goals、驗收方向與前序風險。 | 前一 Phase 正式關閉 |
 | 2 | 規劃大／小 Milestone；每個小 Milestone 擁有獨立規格、測試與核准。 | `M1.1` 等 Milestone 狀態與 Gate |
-| 3 | 以核准規格實作，DQA 自行執行 SDD、TDD、Claude DQA（適用時）的測試與審查。 | DQA 指紋、測試證據、正確範圍核准 |
-| 4 | 執行整合、E2E、安全、異常與邊界驗證。 | 完整測試報告與三重 DQA（適用時） |
+| 3 | 以核准規格實作，DQA 依 TDD、SDD、Claude 順序自行測試與審查。 | DQA 指紋、測試證據、正確範圍核准 |
+| 4 | 執行整合、E2E、安全、異常與邊界驗證，DQA 依 TDD、SDD、Claude 順序進行。 | 完整測試報告與三重 DQA（適用時） |
 | 5 | 交付、Release 準備、經驗整理與未解風險回報。 | Gate 與核准紀錄 |
 | 6 | 交接、保存完整歷史與 Lessons Learned。 | Handover 與保存狀態 |
 
@@ -79,7 +79,7 @@ specs/<milestone-id>/injection_manifest.json
 
 ### 4. DQA 與測試完整性
 
-- Phase 3 起維持 SDD DQA、TDD DQA、Claude DQA 的三重審查。
+- Phase 3 與 Phase 4 固定依 TDD DQA、SDD DQA、Claude DQA 的順序進行三重審查；前一項未 PASS 不得開始下一項。
 - TDD DQA 預設使用 `High` reasoning。
 - DQA 自行執行所負責的測試並將證據寫入正式 DQA 報告；不建立或派遣額外測試代理。
 - Phase 3 的 SDD／TDD DQA 合併唯一 `test_case_id` 上限為 30；Phase 4 為 50。超出時不得刪減測試，必須取得 PM 對具體清單的 `phase_test_expansion` 核准。

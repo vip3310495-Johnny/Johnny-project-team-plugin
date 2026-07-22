@@ -16,7 +16,7 @@ def main() -> int:
         status, stale = refresh_context(str(Path(args.project_dir).resolve()), args.status_file or PHASE_STATUS_FILES[args.phase])
     except StatusFileError as error:
         print(f"[REJECTED] {error}"); return 1
-    required = ("SDD", "TDD") if args.phase in {"0", "1", "2"} else ("SDD", "TDD", "Claude")
+    required = ("SDD", "TDD") if args.phase in {"0", "1", "2"} else ("TDD", "SDD", "Claude")
     failed = [role for role in required if status.get(role) != "PASS"]
     if stale or failed:
         print(f"[BLOCKED] Phase {args.phase} 缺少有效 DQA 證據：{', '.join(failed) or '內容已變更'}。不會自動呼叫 Claude CLI；需另取得外部成本核准後明確執行。")

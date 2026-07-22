@@ -6,6 +6,7 @@
 
 ### Changed
 
+- Phase 3／4 的 DQA 改為強制依序執行 TDD → SDD → Claude，拒絕跳過前置 DQA 或提早執行 Claude。
 - 移除 TE agent、TE 批次契約與 Gate 依賴；DQA 直接執行測試、蒐集證據並完成判定，以避免額外耗用 Codex 子代理槽位。
 
 ## [3.1.0] - 2026-07-22

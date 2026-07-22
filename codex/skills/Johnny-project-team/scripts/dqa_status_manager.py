@@ -16,6 +16,8 @@ except (AttributeError, OSError):
 DEFAULT_STATUS_FILE = ".agents/.dqa_status.json"
 VALID_ROLES = ("TDD", "SDD", "Claude")
 VALID_STATUSES = ("PASS", "FAIL")
+ORDERED_STATUS_FILES = {".dqa_status.json", ".phase4_dqa_status.json"}
+DQA_SEQUENCE = ("TDD", "SDD", "Claude")
 STALE = "STALE"
 HARD_MAX_CLAUDE_ATTEMPTS = 2
 _META = "_meta"
@@ -102,6 +104,11 @@ def set_status(role: str, status: str, project_dir: str = ".", status_file: str 
     if status not in VALID_STATUSES:
         raise ValueError(f"不支援的 DQA 狀態：{status}")
     data, _ = refresh_context(project_dir, status_file)
+    if resolve_status_path(project_dir, status_file).name in ORDERED_STATUS_FILES:
+        position = DQA_SEQUENCE.index(role)
+        missing = [required for required in DQA_SEQUENCE[:position] if data.get(required) != "PASS"]
+        if missing:
+            raise StatusFileError(f"DQA 必須依序執行 TDD → SDD → Claude；{role} 前缺少 PASS：{', '.join(missing)}")
     data[role] = status
     data[_META] = {"context_sha256": project_fingerprint(project_dir), "updated_at": utc_now()}
     return save_status(data, project_dir, status_file)
@@ -112,6 +119,9 @@ def prepare_claude_attempt(project_dir: str, status_file: str, rerun: bool) -> N
     data, stale = refresh_context(project_dir, status_file)
     if stale:
         raise StatusFileError("專案內容已變更，所有 DQA PASS 已標為 STALE；請重新執行 TDD 與 SDD DQA。")
+    missing = [role for role in DQA_SEQUENCE[:-1] if data.get(role) != "PASS"]
+    if missing:
+        raise StatusFileError(f"Claude DQA 必須在 TDD 與 SDD PASS 後執行；缺少：{', '.join(missing)}")
     claude_status = data.get("Claude")
     if claude_status == "PASS":
         raise StatusFileError("Claude DQA 已通過，無須重跑。")

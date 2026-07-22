@@ -31,6 +31,7 @@ LOG_REL = Path("Logs/governance_events.jsonl")
 SAVE_STATE_REL = Path("Logs/Save_State.md")
 ROLES = ("SDD", "TDD", "Security", "Claude")
 TRIPLE_DQA_PHASES = {"3", "4", "5", "6"}
+PHASE34_DQA_SEQUENCE = ("TDD", "SDD", "Claude")
 VALID_PHASES = {str(value) for value in range(7)}
 APPROVAL_SCOPES = {
     "phase0_5w_alignment", "phase0_exit", "phase_exit", "milestone_spec",
@@ -291,6 +292,11 @@ def check_architect(args: argparse.Namespace) -> int:
 def set_dqa(args: argparse.Namespace) -> int:
     project = root(args.project_dir); state = get_state(project)
     if args.role not in ROLES or args.status not in {"PASS", "FAIL", "BLOCKED"}: raise ValueError("無效 DQA 角色或狀態")
+    if args.phase in {"3", "4"} and args.role in PHASE34_DQA_SEQUENCE:
+        position = PHASE34_DQA_SEQUENCE.index(args.role)
+        missing = [role for role in PHASE34_DQA_SEQUENCE[:position] if state["dqa_status"].get(f"{args.phase}:{role}", {}).get("status") != "PASS"]
+        if missing:
+            raise ValueError(f"Phase {args.phase} DQA 必須依序執行 TDD → SDD → Claude；{args.role} 前缺少 PASS：{', '.join(missing)}")
     report = (project / args.report).resolve()
     if not report.is_file() or project not in report.parents: raise ValueError("DQA report 必須是專案內既有檔案")
     key = f"{args.phase}:{args.role}"; state["dqa_status"][key] = {"status": args.status, "report": rel(project, report), "report_sha256": file_sha(report), "context_sha256": project_context_sha(project), "updated_at": now()}
@@ -390,7 +396,8 @@ def gate(args: argparse.Namespace) -> int:
         if not errors:
             state["phase0_how_status"] = "VERIFIED"
     if args.from_phase in TRIPLE_DQA_PHASES:
-        errors += dqa_errors(project, state, args.from_phase, ("SDD", "TDD", "Claude"))
+        roles = PHASE34_DQA_SEQUENCE if args.from_phase in {"3", "4"} else ("SDD", "TDD", "Claude")
+        errors += dqa_errors(project, state, args.from_phase, roles)
         errors += validate_test_catalog(project, args.from_phase, args.test_catalog)
     if state.get("blockers"):
         errors.append("存在未處理 blockers")

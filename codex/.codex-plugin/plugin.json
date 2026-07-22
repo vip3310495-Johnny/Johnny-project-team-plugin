@@ -1,0 +1,36 @@
+{
+  "name": "johnny-project-team-plugin",
+  "version": "3.1.0+codex.20260722133216",
+  "description": "Codex \u76f8\u5bb9\u7684\u53ef\u9a57\u8b49\u591a\u4ee3\u7406\u5c08\u6848\u6cbb\u7406\u3001\u6838\u51c6 Ledger\u3001DQA\u3001TE \u8207\u5b8c\u6574 Log \u5de5\u4f5c\u6d41\u7a0b\u3002",
+  "author": {
+    "name": "Johnny Team"
+  },
+  "repository": "https://github.com/vip3310495-Johnny/Johnny-project-team-plugin",
+  "license": "MIT",
+  "keywords": [
+    "project-management",
+    "multi-agent",
+    "dqa",
+    "engineering",
+    "lessons-learned"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Johnny Project Team",
+    "shortDescription": "Codex \u591a\u4ee3\u7406\u5c08\u6848\u6cbb\u7406\u8207 DQA \u5de5\u4f5c\u6d41\u7a0b",
+    "longDescription": "\u4ee5 Codex \u539f\u751f\u5354\u4f5c\u3001\u53ef\u9a57\u8b49\u7684\u968e\u6bb5\u9598\u9580\u8207\u624b\u52d5\u57f7\u884c\u7684\u8a3a\u65b7\u5de5\u5177\uff0c\u5354\u52a9\u7ba1\u7406\u958b\u767c\u5c08\u6848\u3002",
+    "developerName": "Johnny Team",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/vip3310495-Johnny/Johnny-project-team-plugin",
+    "defaultPrompt": [
+      "\u7528 Johnny Project Team \u898f\u5283\u9019\u500b\u958b\u767c\u4efb\u52d9\u3002",
+      "\u4ee5 DQA \u5de5\u4f5c\u6d41\u7a0b\u6aa2\u67e5\u76ee\u524d\u8b8a\u66f4\u3002",
+      "\u6574\u7406\u672c\u5c08\u6848\u7684 lessons learned\u3002"
+    ],
+    "brandColor": "#0F766E"
+  }
+}

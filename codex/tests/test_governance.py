@@ -24,7 +24,10 @@ class GovernanceTests(unittest.TestCase):
         self.temp.cleanup()
 
     def invoke(self, *args: str, expected: int = 0) -> subprocess.CompletedProcess[str]:
-        result = subprocess.run([sys.executable, str(SCRIPT), *args, "--project-dir", str(self.project)] if args[0] not in {"detect-python"} else [sys.executable, str(SCRIPT), *args], text=True, encoding="utf-8", capture_output=True)
+        return self.invoke_in(self.project, *args, expected=expected)
+
+    def invoke_in(self, project: Path, *args: str, expected: int = 0) -> subprocess.CompletedProcess[str]:
+        result = subprocess.run([sys.executable, str(SCRIPT), *args, "--project-dir", str(project)] if args[0] not in {"detect-python"} else [sys.executable, str(SCRIPT), *args], text=True, encoding="utf-8", capture_output=True)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return result
 
@@ -144,6 +147,60 @@ class GovernanceTests(unittest.TestCase):
 
     def test_18_init_refuses_to_overwrite_history(self) -> None:
         self.invoke("init", expected=1)
+
+    def test_19_migration_sets_phase_consistent_next_action(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="migration phase 3 ") as directory:
+            project = Path(directory)
+            lock = project / ".agents/.current_phase.lock"
+            lock.parent.mkdir(parents=True); lock.write_text("3", encoding="utf-8")
+            self.invoke_in(project, "migrate", "--apply")
+            state = json.loads((project / ".agents/project_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["current_phase"], "3")
+            self.assertEqual(state["next_action"], "執行 Phase 3")
+            self.invoke_in(project, "render-save-state")
+            self.assertIn("下一步：執行 Phase 3", (project / "Logs/Save_State.md").read_text(encoding="utf-8"))
+
+    def test_20_resume_preserves_existing_checkpoint(self) -> None:
+        state_path = self.project / ".agents/project_state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state.update({"current_phase": "3", "phase_lock": "3", "current_big_milestone": "M3", "blockers": ["等待 DQA"], "next_action": "等待 Phase 3 DQA"})
+        state_path.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+        self.invoke("resume")
+        resumed = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual(resumed["current_big_milestone"], "M3")
+        self.assertEqual(resumed["blockers"], ["等待 DQA"])
+        self.assertEqual(resumed["next_action"], "等待 Phase 3 DQA")
+
+    def test_21_resume_initializes_new_project_at_phase0(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="new governance project ") as directory:
+            project = Path(directory)
+            self.invoke_in(project, "resume")
+            state = json.loads((project / ".agents/project_state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["current_phase"], "0")
+            self.assertEqual(state["next_action"], "完成 Phase 0A 的 5W 對齊")
+            self.assertTrue((project / "PM/Approval_Ledger.json").is_file())
+
+    def test_22_resume_refuses_history_without_authoritative_state(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="missing governance state ") as directory:
+            project = Path(directory)
+            self.write_for(project, "Logs/governance_events.jsonl", "{\"event_type\": \"gate_passed\"}\n")
+            self.write_for(project, "PM/Approval_Ledger.json", "{\"schema_version\": 1, \"entries\": []}\n")
+            self.invoke_in(project, "resume", expected=1)
+            self.assertFalse((project / ".agents/project_state.json").exists())
+
+    def test_23_migration_rejects_invalid_legacy_phase(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="invalid migration phase ") as directory:
+            project = Path(directory)
+            self.write_for(project, ".agents/.current_phase.lock", "7")
+            self.invoke_in(project, "migrate", "--apply", expected=1)
+            self.assertFalse((project / ".agents/project_state.json").exists())
+            self.assertFalse((project / "PM/Approval_Ledger.json").exists())
+
+    def write_for(self, project: Path, relative: str, text: str) -> Path:
+        path = project / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
 if __name__ == "__main__":
     unittest.main()
 

@@ -23,3 +23,5 @@ Phase 3 以後需要 SDD、TDD、Claude 三重 DQA PASS。Claude DQA 的 CLI 執
 ## 狀態、Log 與 Migration
 
 `.agents/project_state.json` 是唯一權威；`render-save-state` 產生 `Logs/Save_State.md`。`Logs/governance_events.jsonl` 為完整不可覆蓋事件歷史，包含時區、trace ID、Gate、DQA 與遮罩後的資料。`migrate` 預設只掃描，只有明確 `--apply` 才建立新檔案，且遇到不明確資料 fail-closed。
+
+重新接手專案時執行 `resume --project-dir <project>`。若權威狀態存在且 Phase／Lock 有效，會保留既有斷點、Milestone、Blockers 與下一步；若僅有合法舊版 `.agents/.current_phase.lock`，會相容遷移並設定與 Phase 一致的下一步。完全沒有狀態、Logs 或 `PM/` 歷史時，才建立全新的 Phase 0 並從 5W 開始。若偵測到 Logs 或 `PM/` 歷史但權威狀態遺失，系統會拒絕猜測斷點，必須人工恢復。

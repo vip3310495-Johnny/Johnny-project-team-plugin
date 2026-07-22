@@ -31,6 +31,7 @@ LOG_REL = Path("Logs/governance_events.jsonl")
 SAVE_STATE_REL = Path("Logs/Save_State.md")
 ROLES = ("SDD", "TDD", "Security", "Claude")
 TRIPLE_DQA_PHASES = {"3", "4", "5", "6"}
+VALID_PHASES = {str(value) for value in range(7)}
 APPROVAL_SCOPES = {
     "phase0_5w_alignment", "phase0_exit", "phase_exit", "milestone_spec",
     "phase_test_expansion", "security_spec", "external_service_cost",
@@ -106,13 +107,28 @@ def project_context_sha(project: Path) -> str:
         digest.update(b"\0")
     return digest.hexdigest()
 
+
+def next_action_for_phase(phase: str) -> str:
+    if phase not in VALID_PHASES:
+        raise ValueError(f"Phase 必須是 0～6：{phase}")
+    return "完成 Phase 0A 的 5W 對齊" if phase == "0" else f"執行 Phase {phase}"
+
+
+def state_for_phase(phase: str) -> dict[str, Any]:
+    state = default_state()
+    state["current_phase"] = phase
+    state["phase_lock"] = phase
+    state["next_action"] = next_action_for_phase(phase)
+    return state
+
+
 def default_state() -> dict[str, Any]:
     return {
         "schema_version": 1, "current_phase": "0", "current_big_milestone": None,
         "current_small_milestone": None, "phase_lock": "0", "approvals": [],
         "stale_approvals": [], "dqa_status": {}, "te_batch_status": {},
         "engineer_dispatch_status": "NOT_DISPATCHED", "blockers": [],
-        "next_action": "完成 Phase 0A 的 5W 對齊", "report_pointers": [],
+        "next_action": next_action_for_phase("0"), "report_pointers": [],
         "phase0_5w_status": "NOT_STARTED", "phase0_5w_approval_id": None,
         "architect_dispatch_status": "BLOCKED", "phase0_how_status": "NOT_STARTED",
         "phase0_exit_status": "NOT_STARTED", "updated_at": now(),
@@ -134,6 +150,17 @@ def get_state(project: Path) -> dict[str, Any]:
     merged = default_state()
     merged.update(data)
     return merged
+
+
+def validate_resumable_state(state: dict[str, Any]) -> None:
+    phase = state.get("current_phase")
+    lock = state.get("phase_lock")
+    if not isinstance(phase, str) or phase not in VALID_PHASES:
+        raise ValueError("project_state.json 的 current_phase 必須是 0～6")
+    if lock != phase:
+        raise ValueError("project_state.json 的 phase_lock 必須等於 current_phase")
+    if not isinstance(state.get("next_action"), str) or not state["next_action"].strip():
+        raise ValueError("project_state.json 的 next_action 必須是非空文字")
 
 
 def save_state(project: Path, state: dict[str, Any]) -> None:
@@ -388,7 +415,7 @@ def gate(args: argparse.Namespace) -> int:
         return 1
     state["current_phase"] = args.to_phase
     state["phase_lock"] = args.to_phase
-    state["next_action"] = f"執行 Phase {args.to_phase}"
+    state["next_action"] = next_action_for_phase(args.to_phase)
     save_state(project, state)
     event(project, "gate_passed", {"from": args.from_phase, "to": args.to_phase})
     print(json.dumps({"result": "PASS", "current_phase": args.to_phase}, ensure_ascii=False))
@@ -444,15 +471,62 @@ def initialize(args: argparse.Namespace) -> int:
     print("[PASS] 已初始化治理狀態")
     return 0
 
+
+def legacy_phase(project: Path) -> str | None:
+    legacy = project / ".agents/.current_phase.lock"
+    if not legacy.exists():
+        return None
+    phase = legacy.read_text(encoding="utf-8-sig").strip()
+    if phase not in VALID_PHASES:
+        raise ValueError(f"舊版 Phase lock 必須是 0～6：{phase}")
+    return phase
+
+
+def has_recovery_history(project: Path) -> bool:
+    return any(path.exists() for path in (ledger_path(project), project / LOG_REL, project / SAVE_STATE_REL))
+
+
+def apply_legacy_migration(project: Path, phase: str) -> None:
+    if state_path(project).exists():
+        raise ValueError("拒絕覆寫既有 state")
+    state = state_for_phase(phase)
+    save_state(project, state)
+    dump(ledger_path(project), {"schema_version": 1, "entries": []})
+    event(project, "governance_migrated", {"legacy_phase": phase})
+
+
 def migrate(args: argparse.Namespace) -> int:
     project = root(args.project_dir); findings = []
     legacy = project / ".agents/.current_phase.lock"
-    if legacy.exists(): findings.append({"legacy": rel(project, legacy), "value": legacy.read_text(encoding="utf-8-sig").strip()})
+    phase = legacy_phase(project)
+    if phase is not None: findings.append({"legacy": rel(project, legacy), "value": phase})
     report = project / "Logs/migration_report.json"; dump(report, {"generated_at": now(), "findings": findings, "apply_requested": args.apply})
     if args.apply:
-        if state_path(project).exists() or not findings: raise ValueError("拒絕覆寫既有 state 或在無明確舊資料時套用 migration")
-        state = default_state(); state["current_phase"] = findings[0]["value"]; state["phase_lock"] = findings[0]["value"]; save_state(project, state); dump(ledger_path(project), {"schema_version": 1, "entries": []})
+        if not findings: raise ValueError("拒絕在無明確舊資料時套用 migration")
+        apply_legacy_migration(project, phase)
     print(f"[PASS] migration report：{rel(project, report)}"); return 0
+
+
+def resume(args: argparse.Namespace) -> int:
+    project = root(args.project_dir)
+    if state_path(project).exists():
+        state = get_state(project)
+        validate_resumable_state(state)
+        source = "project_state"
+    else:
+        phase = legacy_phase(project)
+        if phase is not None:
+            apply_legacy_migration(project, phase)
+            state = get_state(project)
+            source = "legacy_phase_lock"
+        elif has_recovery_history(project):
+            raise ValueError("偵測到 Logs 或 PM 的既有歷史，但缺少權威 project_state.json；請人工恢復，系統不會猜測斷點")
+        else:
+            initialize(argparse.Namespace(project_dir=str(project)))
+            state = get_state(project)
+            source = "new_project"
+    print(json.dumps({"result": "RESUMED", "source": source, "current_phase": state["current_phase"], "next_action": state["next_action"]}, ensure_ascii=False))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -472,6 +546,7 @@ def build_parser() -> argparse.ArgumentParser:
     command = sub.add_parser("render-save-state"); add_project(command); command.set_defaults(func=render_save_state)
     command = sub.add_parser("detect-python"); command.set_defaults(func=detect_python)
     command = sub.add_parser("migrate"); add_project(command); command.add_argument("--apply", action="store_true"); command.set_defaults(func=migrate)
+    command = sub.add_parser("resume"); add_project(command); command.set_defaults(func=resume)
     return parser
 
 

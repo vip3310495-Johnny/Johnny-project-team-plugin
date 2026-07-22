@@ -93,7 +93,7 @@ def semantic_sha(path: Path) -> str:
 
 def project_context_sha(project: Path) -> str:
     """計算可審查產物的內容指紋，排除治理狀態、Log 與審查輸出。"""
-    excluded = {".agents", "Logs", "SDD_DQA", "TDD_DQA", "Security_DQA", "Claude DQA", "TE", "__pycache__", ".pytest_cache", "node_modules", ".venv", "venv"}
+    excluded = {".agents", "Logs", "SDD_DQA", "TDD_DQA", "Security_DQA", "Claude DQA", "__pycache__", ".pytest_cache", "node_modules", ".venv", "venv"}
     digest = hashlib.sha256()
     for path in sorted(project.rglob("*"), key=lambda item: item.as_posix().casefold()):
         relative = path.relative_to(project)
@@ -126,7 +126,7 @@ def default_state() -> dict[str, Any]:
     return {
         "schema_version": 1, "current_phase": "0", "current_big_milestone": None,
         "current_small_milestone": None, "phase_lock": "0", "approvals": [],
-        "stale_approvals": [], "dqa_status": {}, "te_batch_status": {},
+        "stale_approvals": [], "dqa_status": {},
         "engineer_dispatch_status": "NOT_DISPATCHED", "blockers": [],
         "next_action": next_action_for_phase("0"), "report_pointers": [],
         "phase0_5w_status": "NOT_STARTED", "phase0_5w_approval_id": None,
@@ -315,18 +315,6 @@ def validate_test_catalog(project: Path, phase: str, catalog_path: str) -> list[
     return []
 
 
-def validate_te(args: argparse.Namespace) -> int:
-    project = root(args.project_dir); data = load((project / args.batch).resolve(), None)
-    required = {"batch_id", "test_case_ids", "environment", "commands", "started_at", "finished_at", "results", "stdout", "stderr", "evidence_paths", "blocked_items", "tool_requests", "security_observations"}
-    if not isinstance(data, dict) or required - set(data): raise ValueError(f"TE batch 缺少欄位：{sorted(required - set(data or {}))}")
-    for path in data.get("written_paths", []):
-        normalized = Path(path).as_posix().lstrip("./")
-        if normalized.startswith(("src/", "specs/", "TDD_DQA/tool/", "SDD_DQA/tool/")):
-            raise ValueError(f"TE 不得寫入產品碼、規格或測試工具：{path}")
-    state = get_state(project); state["te_batch_status"][data["batch_id"]] = {"status": args.status, "path": rel(project, project / args.batch), "updated_at": now()}; save_state(project, state)
-    event(project, "te_batch", {"batch_id": data["batch_id"], "status": args.status}); print("[PASS] TE batch schema 有效"); return 0
-
-
 def validate_milestones(args: argparse.Namespace) -> int:
     project = root(args.project_dir); path = project / args.file; data = load(path, None)
     errors: list[str] = []
@@ -404,9 +392,6 @@ def gate(args: argparse.Namespace) -> int:
     if args.from_phase in TRIPLE_DQA_PHASES:
         errors += dqa_errors(project, state, args.from_phase, ("SDD", "TDD", "Claude"))
         errors += validate_test_catalog(project, args.from_phase, args.test_catalog)
-        pending = [batch for batch, item in state["te_batch_status"].items() if item.get("status") != "PASS"]
-        if pending:
-            errors.append("尚有未通過 TE 批次：" + ", ".join(pending))
     if state.get("blockers"):
         errors.append("存在未處理 blockers")
     if errors:
@@ -538,7 +523,6 @@ def build_parser() -> argparse.ArgumentParser:
     command = sub.add_parser("refresh"); add_project(command); command.set_defaults(func=refresh)
     command = sub.add_parser("check-architect-dispatch"); add_project(command); command.set_defaults(func=check_architect)
     command = sub.add_parser("set-dqa"); add_project(command); command.add_argument("--phase", required=True); command.add_argument("--role", required=True); command.add_argument("--status", required=True); command.add_argument("--report", required=True); command.add_argument("--context-sha256", default="declared"); command.set_defaults(func=set_dqa)
-    command = sub.add_parser("validate-te"); add_project(command); command.add_argument("--batch", required=True); command.add_argument("--status", choices=("PASS", "FAIL", "BLOCKED"), required=True); command.set_defaults(func=validate_te)
     command = sub.add_parser("validate-milestones"); add_project(command); command.add_argument("--file", default="PM/milestones.json"); command.set_defaults(func=validate_milestones)
     command = sub.add_parser("gate"); add_project(command); command.add_argument("--from-phase", required=True); command.add_argument("--to-phase", required=True); command.add_argument("--signature", required=True); command.add_argument("--small-milestone"); command.add_argument("--test-catalog", default="TDD_DQA/test_catalog.json"); command.add_argument("--auto", action="store_true"); command.set_defaults(func=gate)
     command = sub.add_parser("init-milestone"); add_project(command); command.add_argument("--milestone", required=True); command.set_defaults(func=init_milestone)

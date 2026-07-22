@@ -14,9 +14,9 @@
 
 任何 5W 語意變更都會使 5W、How 與 Phase 0 Exit 狀態變成 `STALE`；純排版不會失效。
 
-## DQA、TE 與測試目錄
+## DQA 與測試目錄
 
-Phase 3 以後需要 SDD、TDD、Claude 三重 DQA PASS。Claude DQA 的 CLI 執行需要另行取得成本同意；未執行或不可用一律是 `BLOCKED`，不可當作 PASS。TE 以 `validate-te` 驗證批次 Schema，且任何 `written_paths` 指向 `src/`、`specs/` 或 DQA 工具目錄會失敗。
+Phase 3 以後需要 SDD、TDD、Claude 三重 DQA PASS。Claude DQA 的 CLI 執行需要另行取得成本同意；未執行或不可用一律是 `BLOCKED`，不可當作 PASS。每位 DQA 必須自行執行其負責的測試、蒐集證據並在正式 DQA 報告中記錄結果；不得再建立或派遣測試執行代理。
 
 `TDD_DQA/test_catalog.json` 的 `test_cases` 必須有唯一 `test_case_id`。Phase 3 合計上限 30、Phase 4 合計上限 50；超限不得刪減，PM 必須以列出允許數量的 `phase_test_expansion` 核准放行。測試重複只能以明確對應與去重理由處理。
 

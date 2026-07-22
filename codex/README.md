@@ -1,6 +1,6 @@
 # Johnny Project Team Plugin（Codex 版）
 
-以 Codex 原生協作為核心的多代理專案治理 Plugin。它把產品探索、CEO 核准、架構設計、工程實作、DQA 審查、TE 測試與完整可追溯 Log 串成可驗證、預設 fail-closed 的流程。
+以 Codex 原生協作為核心的多代理專案治理 Plugin。它把產品探索、CEO 核准、架構設計、工程實作、DQA 審查與完整可追溯 Log 串成可驗證、預設 fail-closed 的流程。
 
 > 本資料夾是 Codex 版本。原始 Antigravity 版本位於倉庫根目錄的 [`../antigravity/`](../antigravity/)；兩者可獨立安裝，請勿混用其設定與 Hook。
 
@@ -10,8 +10,8 @@
 
 - **先釐清產品，再決定技術。** Phase 0 先由 Grill-me 引導 CEO 回答 5W 與希望的設計風格；未完成 `PHASE0_5W_ALIGNMENT` 前，不得派遣 Architect 或產出正式 How。
 - **核准必須可追溯。** Approval Ledger 綁定 scope、Phase、Milestone、產物路徑與 SHA-256；單純 `/approve` 字串不構成有效授權。
-- **Gate 預設拒絕。** 遺漏產物、Schema、DQA 證據、核准、TE 批次或前序 Phase 關閉狀態時，Gate 會列出缺失並阻擋推進。
-- **角色責任要清楚。** PM 協調；Architect 只在核准後補充 How；Engineer 實作；DQA 判定品質；TE 僅執行測試與蒐證。
+- **Gate 預設拒絕。** 遺漏產物、Schema、DQA 證據、核准或前序 Phase 關閉狀態時，Gate 會列出缺失並阻擋推進。
+- **角色責任要清楚。** PM 協調；Architect 只在核准後補充 How；Engineer 實作；DQA 自行測試、蒐證並判定品質。
 - **完整歷史不可被摘要取代。** JSONL Log 保留命令、證據、trace ID、stdout/stderr、例外、重試與敏感資料遮罩；狀態摘要僅作為查閱入口。
 
 ---
@@ -43,7 +43,7 @@ flowchart TD
 | 0C | SDD DQA、TDD DQA 驗證 5W1H、風險、可測試性與可觀測性。 | `PHASE0_EXIT` |
 | 1 | 整理產品範圍、Non-goals、驗收方向與前序風險。 | 前一 Phase 正式關閉 |
 | 2 | 規劃大／小 Milestone；每個小 Milestone 擁有獨立規格、測試與核准。 | `M1.1` 等 Milestone 狀態與 Gate |
-| 3 | 以核准規格實作，執行 SDD、TDD、Claude DQA（適用時）與 TE 批次測試。 | DQA 指紋、TE 證據、正確範圍核准 |
+| 3 | 以核准規格實作，DQA 自行執行 SDD、TDD、Claude DQA（適用時）的測試與審查。 | DQA 指紋、測試證據、正確範圍核准 |
 | 4 | 執行整合、E2E、安全、異常與邊界驗證。 | 完整測試報告與三重 DQA（適用時） |
 | 5 | 交付、Release 準備、經驗整理與未解風險回報。 | Gate 與核准紀錄 |
 | 6 | 交接、保存完整歷史與 Lessons Learned。 | Handover 與保存狀態 |
@@ -77,11 +77,11 @@ specs/<milestone-id>/injection_manifest.json
 
 這可避免共用規格檔被覆寫，並保留 Context Injection 的來源、SHA-256、角色、編碼、時間與結果。
 
-### 4. DQA、TE 與測試完整性
+### 4. DQA 與測試完整性
 
 - Phase 3 起維持 SDD DQA、TDD DQA、Claude DQA 的三重審查。
 - TDD DQA 預設使用 `High` reasoning。
-- TE 只能執行 DQA 指派的測試與蒐集證據；不得修改產品碼、規格、工具或正式 DQA 報告。
+- DQA 自行執行所負責的測試並將證據寫入正式 DQA 報告；不建立或派遣額外測試代理。
 - Phase 3 的 SDD／TDD DQA 合併唯一 `test_case_id` 上限為 30；Phase 4 為 50。超出時不得刪減測試，必須取得 PM 對具體清單的 `phase_test_expansion` 核准。
 - 未執行、受阻與失敗必須分別記錄，不能標示為 PASS。
 
@@ -99,7 +99,7 @@ Claude DQA 是外部、唯讀審查節點。Plugin **不會自動呼叫** Claude
 
 ### 6. 單一狀態與完整可觀測性
 
-`.agents/project_state.json` 是單一權威狀態，記錄目前 Phase、大小 Milestone、核准、STALE 項目、DQA／TE／Engineer 狀態、blocker、下一步與報告位置。
+`.agents/project_state.json` 是單一權威狀態，記錄目前 Phase、大小 Milestone、核准、STALE 項目、DQA／Engineer 狀態、blocker、下一步與報告位置。
 
 完整 JSONL Log 會記錄時區時間、角色、correlation ID、命令、工具版本、環境、stdout/stderr、例外、重試、Gate 轉換與證據位置，並遮罩 Token、密碼、個資與敏感附件內容。
 
@@ -198,7 +198,7 @@ $env:PYTHONUTF8 = '1'
 python -X utf8 <skill-creator>/scripts/quick_validate.py skills/Johnny-project-team
 ```
 
-完整測試亦涵蓋 Ledger、Gate、Milestone 隔離、語意／排版 stale、DQA → TE、Log 遮罩、Unicode、interpreter 偵測、Hook 重跑與 Phase 0 forward test。
+完整測試亦涵蓋 Ledger、Gate、Milestone 隔離、語意／排版 stale、DQA 測試證據、Log 遮罩、Unicode、interpreter 偵測、Hook 重跑與 Phase 0 forward test。
 
 ---
 
@@ -211,7 +211,7 @@ codex/
 ├─ skills/
 │  └─ Johnny-project-team/
 │     ├─ SKILL.md                  # 核心流程與資源路由
-│     ├─ references/               # Phase、Gate、Log、DQA／TE 規格
+│     ├─ references/               # Phase、Gate、Log、DQA 規格
 │     ├─ scripts/                  # 可重複執行的治理與驗證工具
 │     └─ tests/                    # Plugin 專屬測試
 └─ tests/                          # 治理整合測試

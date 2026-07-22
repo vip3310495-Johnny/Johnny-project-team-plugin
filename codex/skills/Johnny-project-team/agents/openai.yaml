@@ -1,4 +1,4 @@
 interface:
   display_name: Johnny Project Team
   short_description: 可驗證的多代理專案治理與 DQA 閘門
-  default_prompt: 使用 Johnny Project Team 建立可追溯的階段、核准、DQA 與 TE 驗證流程。
+  default_prompt: 使用 Johnny Project Team 建立可追溯的階段、核准與 DQA 驗證流程。

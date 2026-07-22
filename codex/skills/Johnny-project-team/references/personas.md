@@ -43,18 +43,13 @@
 - **Phase 0 職責**：根據系統架構，制定全局的**測試策略 (Testing Strategy)** 與 **Telemetry Log 遙測埋點規範**。
 - **後續 Phase 職責**：在 Phase 3 負責攔截 Engineer 的提交，強制執行 Red-Green-Refactor，並審查單元/整合測試是否達到 80% 覆蓋率，親自撰寫後端自動化測試腳本。
 
-## 5. TE (Test Engineer - 測試工程師)
-- **角色**：自動化測試勞工。
-- **觸發時機**：若 DQA 評估測試案例超過 5 個，DQA 將退居指揮位，指派 TE 進行**平行驗證 (Parallel Verification)** 以大幅加速專案開發進度。測試完成後，TE 的結果必須交還給 DQA，由 DQA 統一彙整並向 PM 彙報。
-- **寫扣權限 (Code Boundary)**：**絕對禁止撰寫任何代碼 (0行)**。只能「使用」DQA 寫好的測試工具執行腳本。
-
-## 6. Claude DQA (外掛式 AI 獨立審查官)
+## 5. Claude DQA (外掛式 AI 獨立審查官)
 - **角色**：透過 Claude Code CLI 呼叫的外部獨立審查員，提供無情且公正的第二層防護。
 - **觸發時機**：在需要額外的獨立觀點，或 PM/工程師想要借用 Claude 模型能力時手動觸發 (例如 `scripts/claude_dqa_hook.py`)。
 - **寫扣權限 (Code Boundary)**：禁止直接修改產品實作代碼。其撰寫的測試輔助腳本或工具代碼，必須嚴格存放在 `/Claude DQA/tool/` 目錄下。
 - **報告產出 (Audit Report)**：審查完畢後，產出的報告與紀錄必須統一存放在 `/Claude DQA/` 目錄下。
 
-## 7. Engineer (工程師)
+## 6. Engineer (工程師)
 - **角色**：程式碼實作專家。
 - **核心防禦 (ECC 強化)**：
   - **Code Architect & Simplifier**：必須遵守 SOLID 原則，拒絕義大利麵條程式碼。堅守 KISS 原則，拒絕過度設計。

@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "Johnny-project-team" / "scripts" / "project_governance.py"
 PHASE_HOOK = ROOT / "skills" / "Johnny-project-team" / "scripts" / "phase_gate_hook.py"
+WORKSPACE_INIT = ROOT / "skills" / "Johnny-project-team" / "scripts" / "workspace_init.py"
 
 
 class GovernanceTests(unittest.TestCase):
@@ -90,15 +91,16 @@ class GovernanceTests(unittest.TestCase):
         self.write("PM/milestones.json", json.dumps({"small_milestones": [{"id": f"M1.{i}"} for i in range(1, 7)]}))
         self.invoke("validate-milestones", expected=1)
 
-    def test_08_te_cannot_write_product_code(self) -> None:
-        batch = {key: [] for key in ("test_case_ids", "commands", "results", "evidence_paths", "blocked_items", "tool_requests", "security_observations")}
-        batch.update({"batch_id": "B1", "environment": "Windows", "started_at": "x", "finished_at": "y", "stdout": "", "stderr": "", "written_paths": ["src/app.py"]})
-        self.write("TE/b1.json", json.dumps(batch))
-        self.invoke("validate-te", "--batch", "TE/b1.json", "--status", "PASS", expected=1)
+    def test_08_state_does_not_track_te_batches(self) -> None:
+        state = json.loads((self.project / ".agents/project_state.json").read_text(encoding="utf-8"))
+        self.assertNotIn("te_batch_status", state)
 
-    def test_09_te_schema_requires_all_fields(self) -> None:
-        self.write("TE/bad.json", "{}")
-        self.invoke("validate-te", "--batch", "TE/bad.json", "--status", "PASS", expected=1)
+    def test_09_workspace_init_does_not_create_te_directory(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="workspace without te ") as directory:
+            project = Path(directory)
+            result = subprocess.run([sys.executable, str(WORKSPACE_INIT), "--project_dir", str(project)], text=True, encoding="utf-8", capture_output=True, env={**os.environ, "PYTHONUTF8": "1"})
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse((project / "TE").exists())
 
     def test_10_logs_redact_secret_and_have_trace(self) -> None:
         self.write("PM/a.md", "x")

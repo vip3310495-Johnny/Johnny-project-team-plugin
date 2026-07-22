@@ -48,7 +48,7 @@ def main():
     check_lockout(lock_file)
 
     # 驗證角色合法性
-    allowed_roles = ["Engineer", "PM", "DQA", "Architect", "TE"]
+    allowed_roles = ["Engineer", "PM", "DQA", "Architect"]
     if args.role not in allowed_roles:
         fails = increment_fail_count(lock_file)
         print(f"[FAIL] ({fails}/5) 🛑 教訓提案拒絕：角色 '{args.role}' 未獲授權。")

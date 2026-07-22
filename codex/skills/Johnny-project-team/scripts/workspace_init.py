@@ -12,7 +12,7 @@ def main() -> int:
     if not project.is_dir():
         print(f"[REJECTED] 專案不存在：{project}")
         return 1
-    for relative in (".agents", "PM", "Architect", "Logs", "SDD_DQA", "TDD_DQA", "TE", "specs"):
+    for relative in (".agents", "PM", "Architect", "Logs", "SDD_DQA", "TDD_DQA", "specs"):
         (project / relative).mkdir(parents=True, exist_ok=True)
     print("[PASS] 已建立最小治理目錄；未執行 Git 操作或覆寫既有檔案。")
     return 0

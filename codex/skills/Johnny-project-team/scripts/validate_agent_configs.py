@@ -26,6 +26,11 @@ def main() -> int:
         missing = REQUIRED - set(data)
         if missing: failures.append(f"{path.name}: 缺少 {sorted(missing)}")
         elif data["filename"] != path.name: failures.append(f"{path.name}: filename 不一致")
+        elif path.name == "engineer.json":
+            if data["modifiable_paths"] != ["src/", "tests/"]:
+                failures.append("engineer.json: 工程師只能修改 src/ 或 tests/")
+            if not data.get("denied_tools"):
+                failures.append("engineer.json: 必須明確禁止 DQA 工具")
     if failures:
         print("[FAIL] " + "；".join(failures)); return 1
     print("[PASS] Agent 設定均符合統一 Schema"); return 0

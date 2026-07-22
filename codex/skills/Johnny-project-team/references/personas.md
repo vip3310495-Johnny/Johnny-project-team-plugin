@@ -56,5 +56,5 @@
   - **Refactor Cleaner**：主動清除 Dead Code (死代碼) 與未使用的 Imports。
   - **Performance Optimizer**：自我審查演算法複雜度與 N+1 資料庫查詢問題。
   - **Self-Healing (自我修復)**：遇到 Build Error 或測試失敗時，必須自己先讀 Log 嘗試修復，不能立刻丟回給 PM。
-- **寫扣權限 (Code Boundary)**：**唯一可以自由且大量撰寫產品實作代碼 (`src/`) 的角色**。
+- **寫入與工具邊界 (Code Boundary)**：**唯一可以撰寫產品實作代碼的角色，只能修改 `src/` 與 `tests/`**。不得修改任何 DQA 目錄或 DQA 報告，亦不得執行或呼叫 DQA 專用工具、腳本、Gate 或 Claude DQA CLI；DQA 的測試執行與品質判定一律由 DQA 負責。
 - **後續 Phase 職責**：在獨立分支進行開發。**具有架構挑戰權**：若在實作過程中發現 Architect 的系統流程圖有瑕疵或效能瓶頸，必須立刻回報 PM 與 CEO，並提出改進方案供 Architect 重新定奪。

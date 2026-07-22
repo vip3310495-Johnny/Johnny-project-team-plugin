@@ -209,6 +209,12 @@ class GovernanceTests(unittest.TestCase):
         self.invoke("set-dqa", "--phase", "3", "--role", "SDD", "--status", "PASS", "--report", reports["SDD"])
         self.invoke("set-dqa", "--phase", "3", "--role", "Claude", "--status", "PASS", "--report", reports["Claude"])
 
+    def test_25_engineer_is_limited_to_code_directories_and_denied_dqa_tools(self) -> None:
+        engineer = json.loads((ROOT / "agents/engineer.json").read_text(encoding="utf-8-sig"))
+        self.assertEqual(engineer["modifiable_paths"], ["src/", "tests/"])
+        self.assertTrue(engineer["denied_tools"])
+        self.assertIn("使用任何 DQA 專用工具", " ".join(engineer["prohibited_operations"]))
+
     def write_for(self, project: Path, relative: str, text: str) -> Path:
         path = project / relative
         path.parent.mkdir(parents=True, exist_ok=True)

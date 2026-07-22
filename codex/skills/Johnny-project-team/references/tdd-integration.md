@@ -1,23 +1,22 @@
 # TDD 整合規範 (TDD Integration & Red-Green-Refactor)
 
-本專案強烈要求工程師遵守 TDD (Test-Driven Development) 開發模式。
-所有開發任務必須遵循以下循環：
+本專案以 DQA 主導 TDD (Test-Driven Development)。工程師只可修改 `src/` 與 `tests/` 的程式碼；DQA 工具、測試執行與品質判定均由 TDD DQA 負責。
 
 ## 1. RED (撰寫失敗的測試)
-- Engineer 必須先根據 DQA 規劃的 `Mock_Data.json` 與測試計畫，撰寫自動化測試腳本。
-- 此階段的測試執行結果必須是**失敗 (RED)**，藉此驗證測試案例本身具備捕捉 Bug 的能力。
+- Engineer 可依 DQA 規劃的 `Mock_Data.json` 與測試計畫，在 `tests/` 撰寫自動化測試腳本；不得使用 DQA 專用工具或執行 DQA 工作流程。
+- TDD DQA 執行測試並確認結果為**失敗 (RED)**，以驗證測試案例具備捕捉 Bug 的能力，再將失敗證據交給 Engineer。
 
 ## 2. GREEN (實作最低限度功能)
-- Engineer 實作最少量的產品代碼，唯一目標是讓剛剛寫的測試腳本順利通過。
+- Engineer 只在 `src/` 實作最少量的產品代碼，目標是回應 DQA 提供的失敗證據。
 - 禁止在此階段進行過度設計 (Over-engineering)。
 
 ## 3. REFACTOR (重構與收斂)
-- 當測試通過後 (GREEN)，Engineer 必須回頭檢視代碼。
+- 當 DQA 回報測試通過 (GREEN) 後，Engineer 必須回頭檢視 `src/` 與 `tests/` 代碼。
 - 發動 Code Simplifier 消除死代碼 (Dead Code)、移除不必要的相依性。
 - 確保時間與空間複雜度達到最佳狀態。
 
 ## 4. DQA 80% 覆蓋率大關
-- Engineer 完成開發後，必須確保本地端測試覆蓋率達到 80% 以上。
+- Engineer 完成 `src/` 與 `tests/` 開發後，由 TDD DQA 執行測試並確認覆蓋率達到 80% 以上。
 - 若覆蓋率未達 80%，TDD DQA 將會在 Phase 3 的第一關直接亮紅燈退件。
 - PM **不具備**覆蓋率特批權限，此為系統硬性規範。
 
@@ -44,4 +43,4 @@
 ## 7. TDD DQA 最高裁量權 (Strict Discretion)
 - TDD DQA 擁有對於上述「高階防禦體系」的**最高裁量權**。
 - TDD DQA 必須以最嚴苛的標準審視當前專案，自行決定是否需要啟用併發測試、冪等性測試等高階防線。
-- 一旦 DQA 判定需要，工程師**不得拒絕**，必須照單全收實作對應的自動化測試腳本。
+- 一旦 DQA 判定需要，工程師**不得拒絕**，必須在 `src/` 或 `tests/` 實作修正；自動化測試的執行與判定仍由 TDD DQA 負責。

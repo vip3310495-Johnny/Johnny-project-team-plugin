@@ -43,7 +43,7 @@ def test_path_guard_allows_src_modifications(mock_git_repo):
     (mock_git_repo / "src").mkdir()
     (mock_git_repo / "src/main.py").write_text("print('hello')", encoding="utf-8")
     subprocess.run(["git", "add", "src/main.py"], cwd=mock_git_repo, check=True)
-    result = run_guard([sys.executable, PATH_GUARD], cwd=mock_git_repo)
+    result = run_guard([sys.executable, PATH_GUARD, "--role", "engineer"], cwd=mock_git_repo)
     assert result.returncode == 0
     assert "[GREEN LIGHT]" in result.stdout
 
@@ -55,6 +55,24 @@ def test_path_guard_allows_dqa_modifications(mock_git_repo):
     result = run_guard([sys.executable, PATH_GUARD], cwd=mock_git_repo)
     assert result.returncode == 0
     assert "[GREEN LIGHT]" in result.stdout
+
+
+def test_path_guard_allows_engineer_tests_modifications(mock_git_repo):
+    (mock_git_repo / "tests").mkdir()
+    (mock_git_repo / "tests/test_feature.py").write_text("assert True", encoding="utf-8")
+    subprocess.run(["git", "add", "tests/test_feature.py"], cwd=mock_git_repo, check=True)
+    result = run_guard([sys.executable, PATH_GUARD, "--role", "engineer"], cwd=mock_git_repo)
+    assert result.returncode == 0
+    assert "[GREEN LIGHT]" in result.stdout
+
+
+def test_path_guard_blocks_engineer_dqa_modifications(mock_git_repo):
+    (mock_git_repo / "TDD_DQA").mkdir()
+    (mock_git_repo / "TDD_DQA/test_report.py").write_text("assert True", encoding="utf-8")
+    subprocess.run(["git", "add", "TDD_DQA/test_report.py"], cwd=mock_git_repo, check=True)
+    result = run_guard([sys.executable, PATH_GUARD, "--role", "engineer"], cwd=mock_git_repo)
+    assert result.returncode == 1
+    assert "Engineer 只能修改 `src/` 或 `tests/`" in result.stdout
 
 
 def test_path_guard_blocks_root_modifications(mock_git_repo):

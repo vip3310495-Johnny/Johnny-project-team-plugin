@@ -18,6 +18,8 @@
 
 Phase 3 與 Phase 4 必須依序完成 TDD DQA、SDD DQA、Claude DQA；前一項未 PASS 時，治理工具拒絕記錄下一項結論或執行 Claude DQA。Claude DQA 的 CLI 執行需要另行取得成本同意；未執行或不可用一律是 `BLOCKED`，不可當作 PASS。每位 DQA 必須自行執行其負責的測試、蒐集證據並在正式 DQA 報告中記錄結果；不得再建立或派遣測試執行代理。
 
+Engineer 只能修改 `src/` 與 `tests/` 的程式碼；不得修改 DQA 目錄、DQA 報告或治理檔案，且不得執行或呼叫任何 DQA 專用工具、腳本、Gate 或 Claude DQA CLI。Engineer 完成允許範圍的修改後交回 PM，由 PM 委派 DQA 測試與判定。
+
 `TDD_DQA/test_catalog.json` 的 `test_cases` 必須有唯一 `test_case_id`。Phase 3 合計上限 30、Phase 4 合計上限 50；超限不得刪減，PM 必須以列出允許數量的 `phase_test_expansion` 核准放行。測試重複只能以明確對應與去重理由處理。
 
 ## 狀態、Log 與 Migration

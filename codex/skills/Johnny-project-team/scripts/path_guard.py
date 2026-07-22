@@ -12,6 +12,7 @@ import os
 
 def main():
     parser = argparse.ArgumentParser(description="目錄隔離守門員 (Path Guard)")
+    parser.add_argument("--role", choices=("engineer", "dqa"), help="套用角色專屬的異動範圍；Engineer 僅可修改 src/ 或 tests/")
     args = parser.parse_args()
 
     print("[HOOK] path_guard.py 開始執行...")
@@ -32,6 +33,18 @@ def main():
     if not files:
         sys.exit(0)
         
+    if args.role == "engineer":
+        engineer_dirs = ("src/", "tests/")
+        forbidden = [f for f in files if not f.startswith(engineer_dirs)]
+        if forbidden:
+            print("\n[FAIL] 🛑 工程師目錄限制攔截 (path_guard):")
+            print("Engineer 只能修改 `src/` 或 `tests/`；以下異動必須交由 PM 或 DQA 處理：")
+            for file_path in forbidden:
+                print(f"  - {file_path}")
+            sys.exit(1)
+        print("[GREEN LIGHT] Engineer 異動均位於 src/ 或 tests/。")
+        sys.exit(0)
+
     code_extensions = ('.py', '.js', '.ts', '.jsx', '.tsx', '.go', '.java', '.cpp', '.c', '.rs', '.php', '.rb')
     allowed_dirs = ('src/', 'tests/', 'TDD_DQA/', 'SDD_DQA/')
     

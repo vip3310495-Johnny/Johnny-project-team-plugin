@@ -79,6 +79,7 @@ specs/<milestone-id>/injection_manifest.json
 
 ### 4. DQA 與測試完整性
 
+- Engineer 僅可修改 `src/` 與 `tests/` 的程式碼，不得修改 DQA 目錄或 DQA 報告，也不得使用 DQA 專用工具；測試執行與品質判定一律由 DQA 執行。
 - Phase 3 與 Phase 4 固定依 TDD DQA、SDD DQA、Claude DQA 的順序進行三重審查；前一項未 PASS 不得開始下一項。
 - TDD DQA 預設使用 `High` reasoning。
 - DQA 自行執行所負責的測試並將證據寫入正式 DQA 報告；不建立或派遣額外測試代理。

@@ -24,9 +24,9 @@
 - 此腳本會強制讀取 `specs/` 內的合約內容。PM 必須將這份內容作為 System Prompt Payload 的一部分，直接塞給 Engineer，確保 Engineer 一出生大腦裡就有最新的規格。
 
 ## 5. 工程師開發與 AgentShield 防爆
-- Engineer 根據灌入的 specs 進行代碼實作。
+- Engineer 根據灌入的 specs 只在 `src/` 與 `tests/` 進行程式碼實作；不得修改 DQA 目錄、DQA 報告或治理檔案，也不得執行 DQA 專用工具或 Claude DQA CLI。
 - 開發過程中，`AgentShield Hook` 會持續在底層監控，攔截危險指令 (如刪除專案或洩漏密碼)。
-- 工程師完成後，編譯並確保程式可執行，隨後將進度交回給 PM。
+- 工程師完成後，編譯並確保程式可執行，隨後將進度交回給 PM；PM 再依序委派 TDD DQA、SDD DQA 與 Claude DQA 執行測試與判定。
 
 ## 6. DQA 驗收防呆閘門
 - PM 請求 DQA 進行驗收。

@@ -1,7 +1,7 @@
 {
   "name": "johnny-project-team-plugin",
-  "version": "3.1.0+codex.20260722133216",
-  "description": "Codex \u76f8\u5bb9\u7684\u53ef\u9a57\u8b49\u591a\u4ee3\u7406\u5c08\u6848\u6cbb\u7406\u3001\u6838\u51c6 Ledger\u3001DQA\u3001TE \u8207\u5b8c\u6574 Log \u5de5\u4f5c\u6d41\u7a0b\u3002",
+  "version": "3.2.1",
+  "description": "Codex \u76f8\u5bb9\u7684\u53ef\u9a57\u8b49\u591a\u4ee3\u7406\u5c08\u6848\u6cbb\u7406\u3001\u6838\u51c6 Ledger\u3001DQA \u8207\u5b8c\u6574 Log \u5de5\u4f5c\u6d41\u7a0b\u3002",
   "author": {
     "name": "Johnny Team"
   },

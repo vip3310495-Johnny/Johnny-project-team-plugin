@@ -1,127 +1,65 @@
-# Phase 3: 開發與驗收循環 (The Chat Chain)
+# Phase 3: 實作與驗收雙迴圈 (Dev & Acceptance Loop)
 
-> **【中斷存檔提醒】** CEO 隨時可能下達「收工」或「暫停」等中斷指令。當收到該指令時，PM 必須立刻停止目前的開發迴圈，並觸發 `SKILL.md` 中定義的**中斷與存檔機制 (Interruption & Save State)**。
+> **【定位與範圍】**：Milestone 微觀開發與驗收執行處。強制實施「規格契約 (Intent Contract)」、「三方上下文強灌 (Context Injection Payload)」、「衝突修合約再開工 (Amend Before Dev)」與「異步變更日誌寫入 (Parallel Change Log Generation)」。
 
-本階段為高頻率的實作與驗證循環，所有工作必須在獨立的 Feature 分支上進行。
+---
 
-## 1. 分支與開發前置
-- Engineer 在獨立分支 (`feature/milestone-X`) 進行開發。
-- 開發必須遵循 TDD 規範 (詳見 `references/tdd-integration.md`) 與終極戒律 (詳見 `references/engineering-agent.md`)。
+## 1. 微觀規格擬定 (Milestone PRD Generation)
+- **架構對齊**：PM 必須**讀取架構師檔案 (`System_Architecture.md` / ADRs)**。
+- **PRD 產出**：PM 依據架構邊界與 Milestone 範疇產出微觀實體檔案 `PM/Milestones/M<N>_PRD.md`，作為 DQA 撰寫驗收合約之基準。
 
-## 2. Token Optimization (省 Token 留痕協議)
-- **【強制規定】**所有 Agent 在聊天頻道中**禁止貼出大量程式碼**。
-- 資訊傳遞一律採用「1-2句話解釋 + 檔案絕對路徑 (File Paths)」來回報進度與問題。
+## 2. BDD 驗收合約與測試項目審核 (BDD Acceptance Contract & Review)
+- PM 喚醒 `SDD_DQA` 與 `TDD_DQA` 產出合約檔案 `specs/sdd_spec.md` 與 `specs/tdd_spec.md`。
+- **BDD & TO-DO Checklist**：合約須採 BDD 語法 (`WHEN...THEN...`) 且包含標準 Markdown Checklist (`- [ ]`)。
+- **測試項目超標審核協定 (Exceed Limit Review Protocol)**：
+  - 預設單一合約測試項目上限為 30 項。
+  - **若 DQA 評估有必要超過 30 項**，DQA 嚴禁擅自擴充，**必須提交 PM 自動進行內部審查與核准 (完全無需 CEO 參與，每個小 Milestone 最多允許提交審核 1 次)**。PM 審查放行後寫入 `specs/.pm_exceed_approved` 驗證 Token 即可放行過關！
 
-## 3. Smoke Test Barrier (工程師自檢防線)
-- Engineer 準備交接給 DQA 之前，必須親自在終端機執行基礎建置或啟動指令 (如 `npm run build` 或 `npm start`)。
-- **安全護欄 (AgentShield Self-Audit) [NEW]**：Engineer 必須在提交前強制執行 `python .agents/skills/Johnny-project-team/scripts/agent_shield_hook.py`。若掃描失敗 (紅燈)，工程師必須提供 Autofix 並重新掃描，絕對禁止將帶有安全漏洞或危險指令的程式碼交給 DQA。
-- **防偷工減料 (Execution Verification)**：Engineer 必須透過 `ls` 證明檔案確實成功產生。若連基本編譯都會 Crash，嚴禁交接。
-- **編譯自救方案**：若工程師遇到編譯失敗，PM 必須強制配發對應語言的 Build Resolver (位於 `references/ecc_agents/`，例如 `react-build-resolver.md`、`python-build-resolver.md`) 給工程師，要求其依照 RCA 流程排錯，嚴禁盲目試錯。
+## 3. 規格簽核放行閘門 (Spec Approval Gate Enforcement)
+- PM 將 `specs/` 呈交 CEO 簽核 (輸入 `/approve`)。
+- PM 強制執行放行 Hook：
+  `python .agents/skills/Johnny-project-team/scripts/verify_spec_approval_hook.py`
+- 驗證授權通過始解鎖開發流程。
 
-## 4. 單線程審查佇列 (Queue Manager)
-- 當 Engineer 完工後，PM 必須透過 `scripts/dqa_queue_manager.py` 進行排隊。
-- 系統保證一次只送審一位工程師的程式碼，徹底防堵 Git Merge Hell。
-- **佇列死鎖防護 (Queue Lock Prevention)**：若 DQA 退回程式碼，必須同時呼叫 `finish` 指令釋放該次審查佇列，讓其他排隊中的工程師進入。該被退回的工程師修復完畢後，必須重新排隊。
+## 4. 三方上下文物理強灌 (Three-Way Context Injection Payload)
+- 在喚醒 Engineer 前，PM 必須執行物理強灌 Hook `inject_specs_hook.py`，將以下 **三方權責文檔完整強灌至 Engineer 之 System Prompt Payload**：
+  1. **架構師檔案** (`System_Architecture.md` / ADRs)
+  2. **當前 Milestone PRD** (`PM/Milestones/M<N>_PRD.md`)
+  3. **DQA 驗收合約** (`specs/sdd_spec.md`, `specs/tdd_spec.md`)
 
-## 5. 測試與串聯審查 (Sequential Review)
-當輪到某程式碼審查時，流程如下：
-1. **DQA 靜態審查 (Static Review)**：PM 指示 DQA 讀取對應語言的 Reviewer (位於 `references/ecc_agents/`，例如 `react-reviewer.md`、`python-reviewer.md`、`go-reviewer.md`)，對交接的程式碼進行靜態抓漏。若有架構問題直接退回。
-2. **TE 平行驗證 (Parallel Verification)**：當 DQA 盤點發現測試案例 $\le$ 5 個時，由 DQA 自行執行；若 $> 5$ 個，DQA 必須指揮 PM 喚醒多名 TE 進行平行驗證。**(注意：TE 必須嚴格遵守 `references/te-persona.md` 的禁令，禁止自己改 Code，只能將 JSON 報告交還給 DQA 彙整)**。
-3. **DQA Test Stalemate**：DQA 必須保證自己的腳本無語法錯誤。若修復腳本失敗超過 3 次，視為 Test Stalemate，交由 PM 處理。
+## 5. 三方合約衝突排解與修合約開工協定 (Contract Conflict & Amend-Before-Dev Protocol) [CRITICAL]
+- **工程師衝突回報**：Engineer 在開工前或實作中，若發現 **PRD、DQA 驗收合約、架構師檔案** 三者之間出現矛盾或邏輯衝突，**必須立刻停工並呈報 PM**。
+- **階層排解與 CEO 升級**：
+  - PM 優先進行協調與排解。
+  - 若 PM 無法決定，PM **必須立刻呈報 CEO 請求終極裁決**。
+- **修合約再開工鐵律 (Amend Before Dev)**：衝突裁決後，PM **必須先指示相關角色 (Architect / PM / DQA) 修改並更新其權責合約與文檔**，確保三方合約 100% 一致後，**才允許指示 Engineer 重新開工**！
 
-## 3.5 DQA 狀態重置 (DQA Reset) [CRITICAL]
-- 在每輪正式的 DQA 審查開始前，PM 必須強制在終端機執行：
-  `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --reset`
-- 確保上一輪的綠燈記錄被清空，防止 Engineer 鑽漏洞沿用舊的 PASS 狀態。
-4. **TDD DQA 第一關 (理科把關)**：
-   - 確保測試 100% 通過且覆蓋率達 80%。
-   - 使用 `references/dqa-analysis.md` 核對靜默錯誤、記憶體洩漏等易錯點。
-   - **【動態運行強制令與 Docker 沙盒隔離 (Docker Sandbox Mandate)】**：絕對禁止只做靜態看 Code 分析，也**絕對禁止**直接在本地終端機 (Host OS) 下達任何執行指令 (如 `python test.py` 或 `npm test`)。
-   - TDD DQA 必須且只能透過 Docker 容器來掛載執行測試指令，將所有潛在破壞行為 (爆炸半徑) 封死在虛擬貨櫃內。
-     - *指令範例*：`docker run --rm -v ${PWD}:/app -w /app node:18 npm test` 或 `docker run --rm -v ${PWD}:/app -w /app python:3.9 pytest`
-   - 若失敗，亮紅燈 (RED LIGHT) 直接退回。
-   - **【強制打卡】**若測試全數通過，TDD DQA 必須在終端機執行：
-     `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --role TDD --status PASS`
-5. **SDD DQA 第二關 (文科把關)**：
-   - TDD 通過後，SDD 進行視覺對齊、A11y (無障礙) 審查與業務邏輯驗證。
-   - **【規格合規性確認】**：SDD DQA 必須貫徹「SDD 開發精神」，嚴格比對產品實作是否 100% 吻合**全局 PRD** 與 **Milestone 細部開發計畫書**。若有任何遺漏或實作與 Spec 描述不符之處，立即退回。
-   - **【動態體驗驗證 (Computer Use 整合)】**：絕對禁止只看截圖。SDD DQA 必須優先嘗試使用以下工具輔助測試：
-     - 若為 Web 專案：使用 `gstack` (極速無頭瀏覽器) 實際開啟網頁、點擊按鈕、填寫表單。
-     - 跨平台 UI 解析：強制呼叫 `omniparser` 來解析產品的螢幕截圖，取得所有按鈕、圖示的精確 Bounding Box (邊界框) 座標，判斷是否破版或對齊。
-     - **若為非瀏覽器 (如 Native App / Desktop 軟體)**：`omniparser` 依然能精準解析任何截圖的 UI 元素。針對操作，SDD DQA 應利用 Python 的 `pyautogui`、`appium` 等自動化工具，配合 `omniparser` 回傳的座標進行實體游標點擊與輸入。
-     - **【優雅降級 (Graceful Degradation)】**：若上述外部工具未安裝，SDD DQA 必須自動切換至替代方案，不得因此卡住流程：
-       - `gstack` 未安裝 → 改用 `generate_image` 截取畫面 + 視覺分析能力進行 UI 審查。
-       - `omniparser` 未安裝 → 改用目視比對方式審查 UI 對齊與破版，並在報告中註明「未使用自動化 UI 解析」。
-   - **【邊緣狀態與微交互 (Vibe Review)】**：針對前端/UI 專案，SDD DQA 必須無情獵殺缺乏「Loading 狀態」、「無資料 (Empty) 狀態」與「Error 狀態」的裸奔畫面；並確保所有按鈕與連結都具備符合高質感 (Vibe) 的 Hover/Active 微動畫回饋。
-   - **【強制打卡】**若測試全數通過，SDD DQA 必須在終端機執行：
-     `python .agents/skills/Johnny-project-team/scripts/dqa_status_manager.py --role SDD --status PASS`
+## 6. 沙盒開發與防護網 (Sandboxed Execution & AgentShield)
+- Engineer 在隔離沙盒 (Branch Workspace) 依據強灌之三方 specs 進行代碼實作。
+- **AgentShield Guard**：底層持續監控，高危指令即刻攔截。
+- 完成編譯與基本功能驗證後交付進度。
 
-6. **Claude Code DQA 第三關 (外部獨立核查) [強制]**：
-   - **【不可跳過與嚴禁造假 (Anti-Fake Claude)】**：當本地的 TDD 與 SDD DQA 都給予綠燈後，PM **必須且只能**透過 `run_command` 工具在終端機呼叫 `scripts/claude_dqa_hook.py` (或是直接執行 `npx @anthropic-ai/claude-code`) 來喚醒外部的 Anthropic Claude 進行獨立審查。
-   - **🚨 嚴禁使用 invoke_subagent**：PM **絕對不可以**試圖透過 `invoke_subagent` 指令去生出一個名為 "Claude DQA" 的子代理人！那只是用 Gemini 偽裝的假 Claude，這是嚴重的造假行為。必須透過終端機執行真正的 CLI。
-   - **獨立意識與模型彈性**：Claude DQA 被嚴格設定為「不可輕信 PM 說的話」。它會親自去讀取專案檔案進行二次抓漏。**【模型選擇】**預設使用 `Sonnet` 模型，但 PM 必須允許 CEO 隨時透過參數或指令指定其他版本 (例如 `Sonnet-5`, `Opus` 等)。絕不可寫死版本號。
-   - **通過條件**：只有當真正的 Claude CLI 回傳 PASS 時，這段程式碼才算真正通過測試。
+## 7. DQA 物理勾選驗收防爆 (DQA Checklist Verification Hook)
+- DQA 根據 `specs/*.md` 逐項進行驗收測試，成功者將 `[ ]` 標註為 `[x]`。
+- **Automated Inspection Hook**：提交報告前觸發：
+  `python .agents/skills/Johnny-project-team/scripts/verify_dqa_checklist_hook.py`
+- 若掃描出未勾選之 `[ ]`，直接亮紅燈物理阻斷提交，退回工程師修復至 100% `[x]` 覆蓋。
 
-## 5.1 修改即重審 (Anti-Bypass DQA) [CRITICAL]
-- **【鐵律】**：若遇到 CEO 退件或任何測試環節退件，**只要 Engineer 有碰到 `src/` 裡的任何一行程式碼，就必須強制重新跑滿 TDD、SDD 與 Claude DQA 審查流程**，絕對禁止私下改完直接交給 CEO 複測。
-- 只有 PM 針對「文件(md)」的微調可以豁免 DQA。
+## 8. Milestone 異步變更日誌寫入與平行流水線 (Parallel Change Log Generation) [CRITICAL]
+當當前 Milestone (例：Milestone 1) 完成驗收與 CEO 放行後，PM **必須執行異步平行流水線**：
+1. **Milestone 1 通過**：CEO `/approve` 驗收完成。
+2. **下階段 PRD 擬定**：PM 撰寫 Milestone 2 的 PRD (`PM/Milestones/M2_PRD.md`)。
+3. **DQA 審核與工程師派遣**：DQA 審核 M2 specs 通過，PM 派遣 Milestone 2 工程師進場寫扣。
+4. **PM 趁空檔撰寫變更日誌 (Parallel Change Log Generation)**：
+   - PM 趁等待 Milestone 2 工程師開發的空檔，彙整並撰寫 **Milestone 1 工程師實際修改之細部變更摘要**，存為 `PM/Changes/M1_Change_Log.md`。
+   - 此變更日誌留供 Phase 5 架構師進行完工對照。
 
-## 5.5 防盲目試錯機制 (Anti-Blind-Trial) [CRITICAL]
-當工程師收到任何一關 DQA 亮紅燈退件時，**絕對禁止立刻去修改 `src/` 裡的程式碼**。
-工程師必須強制先完成以下兩件事：
-1. **除錯沙盤推演 (RCA)**：產出 `Debug_Hypothesis.md`，並將其嚴格分類存放在 `/Engineer/RCA/` 資料夾下 (例如 `/Engineer/RCA/M1_Login_Bug.md`)。檔案內需明確寫出報錯的 Root Cause (根本原因) 與接下來打算修改的檔案行數。
-2. **提煉與寫入教訓**：將本次踩坑的知識點提煉成通則，並強制執行 Hook 寫入教訓庫 (必須帶上角色標籤)：
-   `python .agents/skills/Johnny-project-team/scripts/verify_lesson_hook.py --role Engineer --proposal "你的具體教訓"`
-3. **放行條件**：只有當 Hook 回傳 `[APPROVED]` 後，工程師才獲准依照沙盤推演的計畫修改實作代碼。
+## 9. 外部獨立審查 (Third-Party Independent Audit)
+- 內部驗收通過後，呼叫外部 Claude CLI 進行極端測試與防禦性抓漏。
+- 若發現瑕疵退回修復；通過則宣布該 Milestone 正式完工。
 
-## 6. 變更請求阻斷機制 (Mid-Flight Spec Change Exception) [NEW]
-在開發過程中 (Phase 3)，若 CEO 下達修改規格的指令，或 Engineer 發現原規格技術上不可行：
-1. **強制暫停 (Pause)**：PM 必須立刻中斷當前的開發與審查佇列。
-2. **降級回溯 (Rollback)**：PM 必須帶著新的需求降級回到 **Phase 1**，更新 `PM/Milestones/M<N>_PRD.md`。
-3. **重新守門 (Re-Gatekeeping)**：更新後的計畫書必須再次經過 Architect 的架構影響評估，以及 SDD DQA 的 **Phase 2** 審核與腳本修正。
-**絕對禁令**：嚴禁 Engineer 在沒有更新 PRD/Spec 的情況下，私下接受 PM 或 CEO 的口頭指令直接改 Code。這會導致 SDD DQA 依照舊 Spec 測試而產生無窮盡的退件死鎖。
-
-## 7. 僵局裁決 (Stalemate Escalate)
-- 若 Engineer 提交的代碼被 DQA 退回超過 **5 次**，觸發僵局。
-- PM 強制暫停開發，撰寫 `Conflict_Report.md`，交由 CEO 進行最終裁決。
-- **【PM 反推卸責任 (Anti-Buck-Passing)】**：PM 必須提出結構化的 Option A / Option B 給 CEO 選擇，絕對禁止直接把錯誤丟給 CEO 去敲指令。
-
-## 8. 合併與大腦清洗
-- **GREEN LIGHT**：若全數通過，PM 將分支合併回 `main` (若有衝突，Engineer 必須手動解衝突，詳見 `git-strategy.md`)。
-- **知識匯流 (Knowledge Merge) [CRITICAL]**：在 `kill` Agent 之前，PM **必須先**讀取 `.agents/lessons_learned/` 目錄中各 Agent 的個人筆記 (如 `engineering_lesson_learn.md`、`dqa_lessons_learned.md`)，將有價值的踩坑經驗提煉合併至團隊統一知識庫 `Logs/lesson_learnt_registry.md`。這是防止 Agent 被回收後，個人記憶永久消失的最後防線。
-- **子代理人記憶清除**：大型 Milestone 結束後，PM 必須強制 `kill` 掉舊的 Engineer 與 DQA，並 `invoke` 新的 Agent 以避免大腦幻覺。新 `invoke` 的 Agent 只需讀取 `Logs/lesson_learnt_registry.md` 即可獲得完整的團隊記憶。
-- **【強制】PM 上下文壓縮 (ECC Memory Flush)**：
-  - 子代理人清除後，PM 必須親自撰寫一份 `M<N>_Digest.md`，總結本次 Milestone 的核心架構變更、未解技術債、以及後續依賴事項。
-  - 將檔案存入 `PM/Memory/` 目錄 (如 `PM/Memory/M1_Digest.md`)。若目錄不存在需先建立。
-  - PM 必須執行：`python .agents/skills/Johnny-project-team/scripts/pm_context_compressor.py PM/Memory/M<N>_Digest.md`。
-  - 腳本會嚴格驗證摘要是否**小於 800 字**。若超標 (RED LIGHT)，PM 必須重新精簡摘要，剔除無用的除錯流水帳；直到腳本回傳 [GREEN LIGHT]，PM 的記憶壓縮才算完成。
-
-## 8.5 視覺化報告產出 (Visual Report Generation) [NEW]
-在每個 Milestone 結束後、將成果送交 CEO 審查之前，PM 必須自動產出一份專屬的視覺化報告：
-1. **強制使用 Mermaid**：**絕對禁止**要求工程師寫 Python 腳本來畫圖，PM 必須直接使用 Markdown 原生的 **Mermaid 語法** (`graph TD`, `sequenceDiagram`) 來產出圖表 Artifact。
-2. **圖表儲存路徑與命名**：這兩份圖表**必須實體存放在 `PM/` 資料夾內**，且嚴格依據 Milestone 命名：
-   - **`PM/M<N>_System_Flow.md`** (系統流程圖)：標示本次 Milestone 新增或修改的系統元件與路由。
-   - **`PM/M<N>_Data_Flow.md`** (資料流向圖)：標示前後端 API 串接與資料庫讀寫狀態。
-3. **CEO 簽核**：PM 必須將這兩份圖表連同 DQA 的最終測試報告，一併呈現給 CEO 進行審查與確認。
-
-## 8.6 強制呼叫 Log Agent 撰寫編年史 [CRITICAL]
-為了確保專案具備可追溯性，PM 必須在「Milestone 結束」、「DQA 連續退件(Stalemate)」、「CEO 退件」這三個節點，**強制在終端機執行**：
-`python .agents/skills/Johnny-project-team/scripts/run_log_agent.py`
-- **PASS 狀態**：紀錄通過的里程碑、架構設計摘要。
-- **FAIL 狀態**：嚴格紀錄「退件原因(Root Cause)」、「Token 浪費點」與「流程偏離情況」。
-- 注意：跳轉閘門會檢查 Log 更新時間，沒跑 Log Agent 絕對不准進入下一階段！
-
-## 8.9 DQA 三重鎖定檢查 (Triple-Lock Clearance) [CRITICAL]
-- **【物理鎖死】**在向 CEO 請求 `/approve` 前，PM **必須且只能**強制執行以下腳本：
-  `python .agents/skills/Johnny-project-team/scripts/verify_all_dqa_passed_hook.py`
-- 若該腳本回傳失敗 (代表 TDD、SDD 或 Claude 其中有漏掉或未通過)，PM **絕對禁止**向 CEO 發送 `/approve` 請求，必須退回補齊所有測試。
-
-## 9. 狀態跳轉與簽核 (Phase Gate Execution)
-在完成視覺化報告產出與 **DQA 三重鎖定檢查** 後，PM 必須執行以下跳轉授權流程：
-1. **主動請求簽核**：PM 必須向 CEO 說明：「本次 Milestone 的 DQA 三重防線已全數通過，視覺化報告已出爐。請您檢視，若同意請輸入 `/approve`，我們將進行後續的跳轉。」
-2. **執行階段閘門**：取得 CEO 的 `/approve` 指令後，PM 必須執行：
-   `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 3 --to_phase <目標階段> --milestone <M編號> --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
-3. **跳轉方向**：
-   - 檢視 `PM/PRD.md` 中的 Milestone 清單。
-   - 若**還有未完成的 Milestone** ➔ 目標階段設為 `1`，腳本放行後跳回 **Phase 1 (Milestone Detailed Planning)** 開始拆解下一個任務。
-   - 若**所有 Milestone 皆已完成** ➔ 目標階段設為 `4`，腳本放行後推進至 **Phase 4 (Final Acceptance & Release)**，準備系統驗收。
+## 10. Milestone 迴圈與階段跳轉 (Phase Gate Transition)
+- **多 Milestone 迴圈**：重複 Step 1~9 直至所有 Milestone 完工。
+- **Phase 3 -> 4 跳轉**：全數完工後向 CEO 請求 `/approve` 簽核，執行階段閘門腳本：
+  `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 3 --to_phase 4 --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
+- [GREEN LIGHT] 後正式進入 Phase 4 成品驗收。

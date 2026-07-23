@@ -18,12 +18,29 @@ def main():
     parser.add_argument(
         "--report-path", 
         type=str, 
-        default="Architect/As_Built_Architecture.md",
+        default=None,
         help="Path to the architecture report markdown file."
     )
     args = parser.parse_args()
 
     filepath = args.report_path
+
+    # 若未指定 CLI 參數，試圖從 stdin 讀取 JSON (AfterTool Hook 相容)
+    if not filepath:
+        try:
+            if not sys.stdin.isatty():
+                import json
+                input_data = sys.stdin.read()
+                if input_data:
+                    payload = json.loads(input_data)
+                    target = payload.get("TargetFile") or payload.get("target_file") or payload.get("path")
+                    if target and ("Architect" in target or "Architecture" in target):
+                        filepath = target
+        except Exception:
+            pass
+
+    if not filepath:
+        filepath = "Architect/As_Built_Architecture.md"
 
     print(f"🔍 正在檢查完工架構報告 (As-Built Architecture Report) ...")
     print(f"📂 目標路徑: {filepath}")

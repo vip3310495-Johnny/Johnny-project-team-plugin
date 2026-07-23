@@ -9,6 +9,11 @@ import os
 import time
 
 # 通用階段閘門腳本：驗證 CEO 簽核後才放行 Phase 跳轉 (references/phases/phase0.md ~ phase4.md)
+# 【Phase 0 特例規範】：
+# Phase 0 為專案初始與甦醒恢復點 (Resumed Project Gateway)。
+# 根據 Save_State.md 復甦點，Phase 0 支援動態任意跳轉 (如 from_phase=0 -> to_phase=1/2/3/4)。
+# 因此 Phase 0 的階段跳轉維持「顯式腳本呼叫」，由本腳本驗證後核發解鎖 Token 並建立初始鎖檔。
+# 進入 Phase 1~6 後，系統層級之 BeforeTool Hook (lock_guard_hook.py) 將全面啟動硬性防禦。
 
 
 def main():
@@ -71,6 +76,12 @@ def main():
         if not args.ceo_signature or not args.ceo_signature.endswith("approve"):
             print("[FAIL] 拒絕存取：缺少 CEO 簽核或無效指令。必須包含 'approve'。")
             sys.exit(1)
+
+    # 4. 核發驗證 Token 供 BeforeTool lock_guard放行 Phase 1~6 鎖檔變更
+    token_file = os.path.join(".agents", ".phase_gate_verified")
+    os.makedirs(os.path.dirname(token_file), exist_ok=True)
+    with open(token_file, "w", encoding="utf-8") as f:
+        f.write(f"TOKEN_VERIFIED:{args.from_phase}->{args.to_phase}")
 
     # 更新階段狀態檔
     os.makedirs(os.path.dirname(lock_file), exist_ok=True)

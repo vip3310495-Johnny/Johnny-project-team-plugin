@@ -1,41 +1,33 @@
-# Phase 4: 系統驗收與自動化腳本完善 (Final Acceptance & Release)
+# Phase 4: 全局驗收與發布上線 (Final Intent Audit & Release Deployment)
 
-本階段發生在所有 Milestone 皆開發完畢後，是專案準備上線 (Release) 前的最後一關。
+> **【定位與範圍】**：全局成品質量覆核與發布點。專注於「雙 DQA 全產品系統測試與戰略意圖覆核 (Dual DQA Full-Product Audit)」、「UAT 實機盲測 (Dogfooding)」與「自動化發布部署 (Release Deployment)」。
 
-## 1. 全局系統整合測試 (System-Level Integration Check)
-- **大腦清洗機制**：若該專案為中大型專案 (Milestone >= 5)，PM 必須 `kill` 掉原本的 DQA Agent，並重新 `invoke` 一名全新的 DQA Agent 來執行最終測試，以消除上下文盲點與疲勞。
-- **簡易專案豁免 (Milestone < 5)**：若專案的 Milestone 總數小於 5，PM 必須在此刻詢問 CEO：「是否需要進行整機測試？」。若 CEO 回覆不強制要求，DQA 可直接給予綠燈通關，節省資源。
-- **【反範圍潛變 (Anti-Scope Creep) 防線】**：在此階段，DQA 的退件權**僅限於「跨模組整合 Bug」與「重大業務邏輯錯誤」**。絕對禁止以「原 PRD 規格不夠完善」為由要求新增功能或改變設計。任何超出原定 PRD 範圍的非致命性發現，只能列為下一版本的優化項目 (Backlog)，不可阻擋當前版本的發布。
+---
 
-## 2. 測試套件收斂 (Test Suite Consolidation)
-- 工程師與 DQA 必須將 Phase 3 產生的所有零碎測試腳本 (位於 `/SDD_DQA/tool/` 與 `/TDD_DQA/tool/`) 收斂至一個標準的自動化測試框架中 (如 pytest 或 Jest)。
-- 建立統一的 `Makefile` 或 CI/CD 配置檔，確保未來只要輸入單一指令 (如 `make test-all`) 即可完成整機迴歸測試。
+## 1. 雙 DQA 全局覆核與全產品功能測試 (Dual DQA Full-Product System Testing)
+- PM 強制喚醒 **`SDD_DQA`** 與 **`TDD_DQA`**，並導入 **Phase 2 審查後的 PRD (`PM/Phase2_Reviewed_PRD.md`)**。
+- **雙 DQA 職責分工**：
+  - **`TDD_DQA` (全產品端到端功能測試)**：依據 Phase 2 審查後的 PRD 進行**全系統級別的整合功能測試 (Full-Product End-to-End System Testing)**，驗證跨模組、跨 Milestone Group 的完整功能流轉與業務閉環，而非先前單一 Milestone 的單點區域測試。
+  - **`SDD_DQA` (戰略意圖與非目標覆核)**：對齊 Phase 2 審查後 PRD 中的 **Intent (開發初衷)** 與 **Non-goals (非目標邊界)**。
+- **測試項目超標審核協定 (Phase 4 Exceed Limit Review Protocol)**：
+  - 預設 Phase 4 全局驗收測試項目上限為 50 項。
+  - **若 DQA 評估有必要超過 50 項**，DQA 嚴禁擅自擴充，**必須提交 PM 自動進行內部審查與核准 (本 Phase 4 全局驗收最多允許提交申請 2 次)**。PM 審查放行後寫入 `specs/.pm_exceed_approved` 驗證 Token 即可放行過關！
+- **一票否決 (Single Veto)**：若全產品功能測試出現致命缺陷、或成品質量違背戰略初衷/侵犯 Non-goals，DQA 必須亮紅燈阻斷發布 (REJECT)。
 
-## 3. 架構師驗證與全員共識 (Architect Verification & Unanimous Consent)
-- **架構師最後審查 (行動指南)**：在上線前，PM 必須強制喚醒 Architect 進行最後的架構覆核。Architect 被喚醒後必須執行以下盤點任務：
-  1. **設計溯源 (Traceability)**：對照 Phase 0 產出的 ADRs 與系統流程圖，盤點最終 `src/` 目錄結構，檢查是否發生「未經授權的架構偏移 (Architectural Drift)」。
-  2. **依賴與膨脹審查 (Dependency Audit)**：檢閱套件清單 (如 `package.json` 或 `requirements.txt`)，確認 Engineer 是否私自引入了非必要的第三方重型套件。
-  3. **資料與資安防護 (Data Flow Check)**：抽查核心 API 與資料庫連線的實作，確認是否遵從 Phase 1 制定的 Schema 與安全邊界。
-  4. **產出最終報告**：Architect 必須輸出帶有系統時間與 P0~P4 分級的 `Final_Architecture_Audit.md` 報告。
-- **全員簽核防線**：PM、Engineer、DQA 與 Architect 四方必須達成「全票同意 (All-Agree)」。只要有一方 (特別是 Architect 或 DQA) 提出 P0/P1 級別的疑慮，立刻退回 Phase 3。
+## 2. CEO 實機盲測與 UAT 驗收 (User Acceptance Testing / Dogfooding)
+- 雙 DQA 均放行過關後，PM 彙整成品封裝檔 (Build Artifacts)、Web 端點或文件呈交 CEO。
+- **UAT 實機盲測 (Dogfooding)**：CEO 進行端到端盲測。
+- 若發現致命阻斷型 Bug (P0/P1)，退回 Phase 3 修正。
 
-## 4. CEO 實機盲測 (Hands-On Intervention) & Phase Gate
-- PM **強制暫停**所有 Agent 工作流程。
-- PM 將編譯好的執行檔、APK 或網站連結發佈給 CEO，並請 CEO 進行實機操作。
-- **【指令提醒義務】**：PM 在呈交測試版本給 CEO 時，必須主動且明確地提醒 CEO：「若您測試無誤，請輸入 `/approve` 來觸發上線流程」。
-- 取得 CEO 的 `/approve` 指令後，PM 必須執行階段閘門腳本：
-  `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 4 --to_phase 5 --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
-- 只有當腳本回傳 `[GREEN LIGHT]`，才能進入最終發布與 Phase 5。
+## 3. 全員一致同意與發布解鎖 (Unanimous Consent & Pre-Release Guard)
+- CEO 滿意並輸入 `/approve` 簽核。
+- **Pre-Release Guard (全體一致同意檢查)**：
+  - PM 執行預發布攔截腳本：
+    `python .agents/skills/Johnny-project-team/scripts/pre-release.py`
+  - 確保所有工程師與 DQA 全員無異議同意、且當前鎖檔處於 Phase 4+ 始解鎖發布權限。
 
-## 5. 安全發布程序 (Release & Tagging)
-CEO 簽核後，PM 嚴禁親自在終端機輸入底層 Git 指令，必須透過專屬腳本完成發布：
-- PM 呼叫 `scripts/release_manager.py`。
-- 腳本將自動執行分支合併、語意化版本號 (Semantic Version) 遞增、`git tag` 標記與 `git push`。
-- **發布完成跳轉**：一旦腳本成功執行完畢，PM 必須宣告專案正式發布，並帶領團隊進入 **Phase 5 (Post-Delivery & Maintenance)**，轉型為維護模式。
-
-## 6. 退回處分與反思 (Rejection Handling)
-若 CEO 在實機測試中發現致命錯誤並退回成品：
-1. **呼叫 Log Agent 紀錄退件**：PM 必須在終端機執行 `python .agents/skills/Johnny-project-team/scripts/run_log_agent.py`，強制將「CEO 退件原因」與「Token/時間浪費點」紀錄到 `Logs/Master_Log.md` 中。
-2. **DQA 檢討報告**：PM 必須強迫 DQA 針對漏掉該 Bug 的失誤，撰寫一份 `DQA_Reflection_Report.md`，並存入 `Logs/lesson_learnt_registry.md` 中。
-3. **重返 Phase 3 與修改即重審 [CRITICAL]**：PM 立即更新 PRD 或 Test Plan，帶領團隊退回 Phase 3 重新修復。
-   - **【鐵律】**：只要 Engineer 有碰到 `src/` 裡的任何程式碼，修復後必須**強制重跑滿 TDD、SDD 與 Claude DQA 的審查流程**，嚴禁直接跳回 Phase 4 給 CEO 複測！
+## 4. 階段閘門與自動化部署 (Phase Gate Transition & Automated Release)
+1. **執行閘門**：PM 強制執行階段閘門腳本：
+   `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 4 --to_phase 5 --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
+2. **Automated Release Deployment**：[GREEN LIGHT] 後，PM 呼叫 `release_manager.py` 執行自動化 Git Merge, Version Tagging & Production Push。
+3. 發布成功後，正式進入 **Phase 5 (Post-Release Audit & Maintenance)**。

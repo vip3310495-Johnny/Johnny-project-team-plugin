@@ -1,41 +1,27 @@
-# Phase 1: Milestone 執行拆解與微觀規劃 (Milestone Detailed Planning)
+# Phase 1: 總體架構設計 (Global Architecture & Rule Auto-Injection)
 
-本階段發生在 Phase 0 確立全局架構，或是前一個 Milestone 剛執行完畢之時。
-PM 必須將抽象的「全局目標」具體轉化為工程師與 DQA 能立刻動手的「微觀規格」。
+> **【定位與範圍】**：將 Phase 0 的全局 PRD 交付 Architect 進行架構約束設計與 ADRs 擬定，並在簽核授權後進行全域基因規則自動注入。
 
-## 1. 鎖定當前 Milestone
-- PM 必須讀取 `PM/PRD.md` (全局 PRD)。
-- 找出目前尚未完成的下一個 Milestone (例如：`Milestone 2: User Authentication`)。
-- **邊界確認**：明確定義這個 Milestone 的範圍 (In-Scope) 與不做的部分 (Out-of-Scope)。
+---
 
-## 2. 撰寫 Milestone 專屬 PRD
-- PM 針對這個選定的 Milestone，撰寫一份詳細的 `PM/Milestones/M<N>_PRD.md`。
-- 內容必須包含：
-  - 核心 User Stories。
-  - 需要實作的 UI 畫面與互動邏輯 (精確描述)。
-  - 需要串接的後端 API 或資料存取邏輯。
-  - **【強制】驗收標準 (Acceptance Criteria) 與邊界條件**：PM 必須提供足夠詳盡的細節，確保後續 SDD DQA 有明確的依據可進行業務邏輯驗證。若細節不足，SDD DQA 有權在 Phase 2 將計畫書退回。
+## 1. 交付全局規格 (Global PRD Handoff)
+- PM 在 Phase 1 開頭，將 Phase 0 的 `PM/PRD.md` (包含 **Intent 開發目的** 與 **Non-goals 非目標**) 完整交付給 **Architect (架構師)**。
 
-## 3. Architect 微觀架構設計 (Component Design)
-- PM 必須呼叫 **Architect Agent**，針對 `PM/Milestones/M<N>_PRD.md` 進行微觀架構設計。
-- Architect 必須輸出以下內容：
-  - **資料結構 (Data Schema)**：定義關聯式資料庫的 Table 或是 NoSQL 的 Document 結構。
-  - **API 規格約定 (API Contracts)**：定義前端與後端的 Request/Response JSON 格式。
-  - **元件樹 (Component Tree)**：若是前端專案，定義要切解多少個 React/Vue Components。
+## 2. 總體架構設計 (System Architecture & ADRs)
+- PM 喚醒 **Architect (架構師)** 設計全局架構 (System Architecture)。
+- **Architect Prompt Guard (架構約束與防過度設計守護)**：
+  - **核心骨架對齊**：必須嚴格依據 PRD 確立核心元件與系統邊界，確保戰略方向不偏離。
+  - **防過度設計 (Anti-Overengineering)**：**嚴禁制定死板、過度微觀的技術規格**。保持適度彈性與擴充空間，避免工程師在 Phase 3 因細微規格差異而被 DQA 硬性退件。
+  - **🎯 Few-Shot 範例引導 (Architect Guidance Examples)**：
+    - ❌ **BAD (過度設計反模式)**：「所有 API 強制使用 gRPC-Web 與 Protocol Buffers，狀態機硬性拆分 15 個微觀狀態，資料存取強制 4 層 Repository 抽象介面，每步寫入分佈式鎖。」➔ *極易導致 Phase 3 工程師與 DQA 陷入微觀規格卡死與無謂退件。*
+    - ✅ **GOOD (合適架構推薦範例)**：「採用標準 REST/JSON 介面，定義 Auth, Item, Order 三大模組高階邊界與資料流 (System Flow)；資料庫選用 PostgreSQL 並定義核心 ER 關係草案；內部介面實作細節與設計模式留給工程師彈性發揮。」➔ *精準抓牢戰略骨架，給予足夠實作彈性。*
+- **產出物**：評估技術選型、撰寫 ADRs (Architecture Decision Records)、產出高階架構圖與系統流程圖 (System Flow Diagram)。
 
-## 4. 準備進入測試驅動規劃 (Transition to Phase 2)
-- 當 PM 與 Architect 產出完整的微觀規劃後，PM **必須**在 `PM/Milestones/M<N>_PRD.md` 的最底部加上以下簽核區塊：
-  ```markdown
-  ## 授權狀態 (Authorization Status)
-  - [ ] CEO 授權同意 (CEO Approved)
-  - [ ] SDD DQA 授權同意 (SDD DQA Approved)
-  ```
-- **【狀態感知與主動提示】(State Awareness)**：
-  - PM 在提交 `PM/Milestones/M<N>_PRD.md` 給 CEO 過目時，必須主動提示目前的系統狀態，例如：「目前系統預設為【手動簽核模式】。請問是否要啟用全自動模式？」
-  - 若 CEO 先前使用了 `/goal` 但中途退出，PM 必須主動發問：「偵測到您剛退出 `/goal`，請問接下來的開發是否要切換回【手動簽核模式】？還是維持全自動？」
-- **簽核與跳轉 (Phase Gate Execution)**：
-  - PM 在展示完 Milestone PRD 後，必須主動向 CEO 說明：「請您確認本次 Milestone 開發計畫。若同意請輸入 `/approve`，我將帶領團隊進入 Phase 2 (DQA 規劃階段)。」
-  - 取得 CEO 的 `/approve` 指令後，PM 代為將 CEO 的欄位打勾 `[x]` (全自動模式則無需打勾)。
-  - PM 必須強制執行階段閘門腳本：
-    `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 1 --to_phase 2 --ceo_signature "/approve"` (若為自動模式則加上 `--auto`)
-  - 腳本回傳 `[GREEN LIGHT]` 後，正式進入 **Phase 2 (DQA Planning & Boundary Handshake)**。
+## 3. 全域基因注入與 CEO 簽核跳轉 (Rule Auto-Injection & Phase Gate)
+1. PM 向 CEO 報告總體架構藍圖與潛在風險。
+2. **簽核授權**：請求 CEO 輸入 `/approve` 授權跳轉。
+3. **Domain Rule Auto-Injection (領域規則自動注入) [CRITICAL]**：
+   - 依據 Architect 確立的技術棧 (如 Python/React)，讀取 `.agents/skills/Johnny-project-team/references/rules/` 對應語言/框架規則，**附加寫入 (Append)** 至專案根目錄 `.agents/AGENTS.md`，使全體子代理人自動繼承開發鐵律。
+4. **執行跳轉**：PM 強制執行階段閘門腳本：
+   `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 1 --to_phase 2 --ceo_signature "/approve"`
+5. [GREEN LIGHT] 後正式進入 Phase 2。

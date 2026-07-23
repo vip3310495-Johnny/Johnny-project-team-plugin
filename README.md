@@ -36,93 +36,81 @@ graph TD
     classDef security fill:#f39c12,stroke:#f1c40f,stroke-width:2px,color:#fff;
 
     %% Phases
-    Start((開始專案)) --> P0["Phase 0: 戰略定義<br/>(初始化大腦 / 載入舊 Context)"]:::phase
-    P0 -- "/approve" --> P1["Phase 1: 總體架構設計<br/>(產出帶有開發目的與 Non-goals 的 PRD)"]:::phase
-    P1 -- "/approve" --> P2["Phase 2: Milestone 切割與 DQA 審查<br/>(DQA 守門與合理性檢核)"]:::phase
+    Start((開始專案)) --> P0["Phase 0: 5W1H 戰略收斂<br/>(載入 5w1h-grill-me，擬定 Intent & Non-goals 全局 PRD)"]:::phase
+    P0 -- "/approve" --> P1["Phase 1: 總體架構設計<br/>(Architect 防過度設計 Few-Shot + 全域基因 Rule Auto-Injection)"]:::phase
+    P1 -- "/approve" --> P2["Phase 2: Milestone 拆解與 DQA 審查<br/>(Skills-to-Tickets 垂直切片 + 複雜專案 Milestone Grouping)"]:::phase
     
     P2 -- "/approve" --> P3Enter
     
-    subgraph P3 ["Phase 3: 實作與封裝核心迴圈"]
+    subgraph P3 ["Phase 3: 實作與驗收雙迴圈"]
         direction TB
-        P3Enter[PM 產出小 PRD] --> DQA_Spec["DQA 撰寫測試合約<br/>(產出帶 TO-DO 的 specs/)"]:::agent
-        DQA_Spec -- "CEO /approve<br/>(verify_spec_approval_hook)" --> Inject["物理餵食 Hook<br/>(inject_specs_hook)"]:::ecc
-        Inject --> Eng[Engineer Agent 開發]:::agent
-        Eng --> Shield{"AgentShield Hook<br/>(攔截危險指令/密碼)"}:::security
+        P3Enter[PM 讀取架構圖並產出小 PRD] --> DQA_Spec["DQA 撰寫 BDD 測試合約<br/>(specs/ 含 Checklist, 上限 30 項)"]:::agent
+        DQA_Spec -- "超過 30 項" --> PM_Review{"PM 內部自動審查放行<br/>(每 Milestone 限 1 次)"}:::ecc
+        PM_Review -- 放行 (.pm_exceed_approved) --> ApproveGate
+        DQA_Spec -- "<= 30 項" --> ApproveGate
+        ApproveGate["CEO 簽核放行<br/>(verify_spec_approval_hook)"] --> Inject["三方上下文物理強灌 Payload<br/>(inject_specs_hook)"]:::ecc
+        Inject --> ConflictCheck{"三方合約衝突檢查<br/>(PRD / DQA / Architect)"}
+        ConflictCheck -- "發現衝突" --> AmendDev["修合約再開工<br/>(Amend Before Dev Protocol)"]:::ecc
+        AmendDev --> Inject
+        ConflictCheck -- "無衝突" --> Eng[Engineer Agent 沙盒開發]:::agent
+        Eng --> Shield{"AgentShield Hook<br/>(攔截高危指令/密碼)"}:::security
         Shield -- 失敗 (Autofix) --> Eng
         Shield -- 通過 --> Smoke[工程師自檢編譯]
-        Smoke --> TDD["TDD DQA 第一關<br/>極端測試/覆蓋率"]:::agent
-        TDD -- 通過 --> SDD["SDD DQA 第二關<br/>(情境逐條驗收)"]:::agent
-        SDD -- 通過 --> CheckSpecs{"DQA 驗收防呆<br/>(verify_dqa_checklist_hook)"}:::ecc
-        CheckSpecs -- "[ ] 未打勾退回" --> SDD
-        CheckSpecs -- "[x] 全部打勾" --> Claude["Claude DQA 第三關<br/>(外部獨立審查)"]:::agent
+        Smoke --> DQA_Check["DQA 物理勾選驗收<br/>(verify_dqa_checklist_hook)"}:::ecc
+        DQA_Check -- "[ ] 未打勾退回" --> Eng
+        DQA_Check -- "[x] 100% 打勾" --> Claude["Claude DQA 外部獨立審查"]:::agent
         Claude -- 退回 --> Eng
-        Claude -- 通過 --> Merge(合併代碼與大腦清洗)
+        Claude -- 通過 --> ChangeLog["PM 異步撰寫上一階段變更日誌<br/>(Parallel Change Log Generation)"]:::agent
     end
     
-    Merge --> CheckMilestone{"Milestones<br/>全部完成?"}
-    CheckMilestone -- 否 (進入下一個任務) --> P3Enter
-    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 成品驗收階段<br/>(SDD 覆核初版開發目的)"]:::phase
+    ChangeLog --> CheckMilestone{"Milestones<br/>全部完成?"}
+    CheckMilestone -- 否 (進入下個 Milestone) --> P3Enter
+    CheckMilestone -- 是 (全部完工) --> P4["Phase 4: 全局驗收與發布上線<br/>(Phase 2 審查 PRD + 雙 DQA 全產品測試 + UAT 盲測)"]:::phase
     
-    P4 -- "/approve" --> P5[Phase 5: 產品上線後維護]:::phase
-    P5 -- "宣告結案" --> P6[Phase 6: 專案封裝與退場]:::phase
+    P4 -- "/approve & pre-release.py" --> P5["Phase 5: 產品上線後維護與迭代<br/>(As-Built 架構快照 + 真實代碼優先原則)"]:::phase
+    P5 -- "宣告結案" --> P6["Phase 6: 專案封裝與退場<br/>(交接手冊 + kill_all 資源釋放 + 休眠)"]:::phase
     P6 -- "/approve" --> End((專案休眠))
     
     %% Continuous Learning Flow (Any Phase)
     subgraph ECC ["持續學習與防禦迴圈 (Continuous Learning)"]
-        ErrorEvent((踩坑/教訓產生)) --> Propose[任何人提出教訓 Proposal]
+        ErrorEvent((踩坑/教訓產生)) --> Propose[教訓 Proposal]
         Propose --> VerifyHook{verify_lesson_hook.py}:::ecc
-        VerifyHook --> Subagent["Lesson Verifier 子代理人<br/>(檢驗通用性)"]:::agent
-        Subagent -- "[REJECTED] (累積5次呼叫 CEO)" --> Propose
-        Subagent -- [APPROVED] --> DB[("全球知識庫<br/>.agents/lessons_learned/DIGEST.md")]
+        VerifyHook --> DB[("全球知識庫<br/>.agents/lessons_learned/DIGEST.md")]
     end
     
     %% Connections for Learning
     Eng -.踩坑.-> ErrorEvent
-    TDD -.抓蟲.-> ErrorEvent
-    P1 -.規劃失誤.-> ErrorEvent
-    
-    DB -."Phase 0/1 喚醒時<br/>精準載入(query_lesson)".-> P0
+    DB -."Phase 0/1 喚醒時載入".-> P0
 ```
 
 
 ### 🔍 各階段詳細作業流程 (Detailed Phase Workflows)
 
 <details>
-<summary><b>Phase 0: 戰略定義 (點擊展開)</b></summary>
+<summary><b>Phase 0: 5W1H 戰略定義與全局 PRD (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
+    participant Grill as 5w1h-grill-me 技能
     participant KB as 教訓知識庫
-    participant Arch as 架構師 (Architect)
-    participant DQA as 品管 (TDD/SDD)
     
-    CEO->>PM: 提出商業需求 (Feature Request)
+    CEO->>PM: 提出商業構想 (Feature Request)
     PM->>KB: 讀取 DIGEST (知識繼承)
-    PM->>PM: 撰寫全局 PRD 草案與推薦 LLM 陣容
-    PM->>Arch: 請求架構審查與繪製系統流程圖
-    Arch->>PM: 產出 ADRs 與架構藍圖
-    PM->>DQA: 請求 DQA 前置審查 (Pre-Audit)
-    DQA->>DQA: 技術可行性審查與極端邊界規劃
-    DQA->>PM: 回報審查報告
-    
-    PM->>CEO: 提交 PRD、架構圖、與模型推薦矩陣
-    Note right of PM: 🛑 強烈建議 CEO 使用 /grill-me 進行盤問
-    
-    opt 最終盤問 (Grill-Me)
-        CEO->>PM: 執行 /grill-me (壓力測試與釐清)
-        PM->>CEO: 解答疑慮並微調計畫
-    end
-    
+    PM->>Grill: 載入並執行 5w1h-grill-me (3-Pass 需求深度挖掘)
+    Grill->>CEO: 進行 5W1H 訪談 (Why, Who, Where, What, When, How)
+    CEO-->>Grill: 提供需求與動機回覆
+    Grill-->>PM: 產出 5W1H Requirement Digest
+    PM->>PM: 撰寫全局 PRD (強制包含 Intent 開發目的 與 Non-goals 非目標)
+    PM->>CEO: 呈交 PM/PRD.md 與模型適配矩陣
     CEO-->>PM: /approve 簽核放行
-    PM->>PM: 注入全局基因 (Rule Auto-loading)
     PM->>PM: 執行 phase_gate_hook.py 進入 Phase 1
 ```
 </details>
 
 <details>
-<summary><b>Phase 1: 總體架構設計 (點擊展開)</b></summary>
+<summary><b>Phase 1: 總體架構設計與基因注入 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -130,19 +118,19 @@ sequenceDiagram
     participant Arch as 架構師 (Architect)
     participant CEO
     
-    PM->>PM: 撰寫全局 PRD (強制包含 開發目的 與 Non-goals)
-    PM->>Arch: 交付 PRD 請求架構設計
-    Arch->>Arch: 設計資料結構、API 規格與元件樹
-    Arch->>PM: 產出 System Architecture
-    PM->>PM: 在 PRD 底部加入授權簽核區塊
-    PM->>CEO: 報告總體規劃與潛在風險，請求授權
+    PM->>Arch: 交付 Phase 0 全局 PRD (含 Intent 與 Non-goals)
+    Arch->>Arch: 設計 System Architecture 與 ADRs
+    Note right of Arch: 🛡️ Architect Prompt Guard:<br/>防過度設計 (Few-Shot 範例引導)
+    Arch-->>PM: 產出高階架構圖與系統流程圖
+    PM->>CEO: 報告總體架構藍圖與潛在風險
     CEO-->>PM: /approve 簽核
-    PM->>PM: 執行 phase_gate_hook.py 驗證跳轉進入 Phase 2
+    PM->>PM: 全域基因自動注入 (Domain Rule Auto-Injection 至 AGENTS.md)
+    PM->>PM: 執行 phase_gate_hook.py 進入 Phase 2
 ```
 </details>
 
 <details>
-<summary><b>Phase 2: Milestone 切割與 DQA 審查 (點擊展開)</b></summary>
+<summary><b>Phase 2: Milestone 拆解與 DQA 垂直切片審查 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -151,116 +139,129 @@ sequenceDiagram
     participant TDD as TDD DQA
     participant CEO
     
-    PM->>PM: 進行小 Milestone 切割與規劃
+    PM->>PM: 進行小 Milestone 拆解
     PM->>SDD: 交付 Milestone 規劃
     PM->>TDD: 交付 Milestone 規劃
     
-    par 守門員審查 (不寫測試代碼，只看合理性)
-        SDD->>SDD: 審查 Milestone 是否過大或難以驗收
-        TDD->>TDD: 審查產出是否具備可測試性
+    par 守門員審查 (Pre-View Audit)
+        SDD->>SDD: 審查 Vertical Slicing (垂直切片)；水平切片一票否決
+        TDD->>TDD: 審查可測試性與解耦程度
     end
     
-    alt 發現問題
-        SDD-->>PM: 提出修改建議與衝突
-        PM->>PM: 整理衝突選項
-        PM->>CEO: 報告衝突並提供選項讓 CEO 決策
-        CEO-->>PM: 做出決策
-    else 審查無誤
-        SDD-->>PM: 同意 Milestone 切割
+    alt DQA 審查退件
+        SDD-->>PM: 指出水平切片瑕疵並退件 (REJECT)
+        PM->>PM: 重新拆解為端到端垂直切片
+    else DQA 審查通過
+        SDD-->>PM: 放行通報
+        opt 小 Milestone 總數 >= 5 個 (複雜專案)
+            PM->>PM: 發動 Milestone Grouping (合併為 Group M1.1, M1.2...)
+        end
     end
     
-    PM->>CEO: 呈交確認後的 Milestone 流程圖與資料流向圖
+    PM->>CEO: 呈交 Phase 2 審查後的 PRD 與架構藍圖
     CEO-->>PM: /approve 簽核
     PM->>PM: 執行 phase_gate_hook.py 進入 Phase 3 開發迴圈
 ```
 </details>
 
 <details>
-<summary><b>Phase 3: 實作與封裝核心迴圈 (點擊展開)</b></summary>
+<summary><b>Phase 3: 實作與驗收雙迴圈 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
+    participant ArchFile as 架構師檔案
     participant DQA as 品管 (TDD/SDD)
     participant CEO
     participant Hook as 實體 Hooks
     participant ENG as 工程師 (Engineer)
     
-    PM->>PM: 產出小 Milestone 細部 PRD
-    PM->>DQA: 要求撰寫測試合約 (Intent Contract)
-    DQA->>DQA: 產出 specs/sdd_spec.md 與 tdd_spec.md (強制包含 Markdown TO-DO `[ ]`)
-    DQA-->>PM: 提交 specs
-    
+    PM->>ArchFile: 讀取 System_Architecture.md
+    PM->>PM: 產出小 PRD (PM/Milestones/M<N>_PRD.md)
+    PM->>DQA: 要求撰寫 BDD 測試合約 (specs/上限 30 項)
+    DQA->>DQA: 產出 sdd_spec.md 與 tdd_spec.md
+    opt 測試項目 > 30 項
+        DQA->>PM: 提交 PM 自動審查授權 (每 Milestone 限 1 次，無需 CEO)
+        PM-->>DQA: 核准放行，生成 .pm_exceed_approved
+    end
     PM->>CEO: 呈交 specs，請求放行
     CEO-->>PM: /approve 簽核
+    PM->>Hook: 執行 verify_spec_approval_hook.py 通過
+    PM->>Hook: 執行 inject_specs_hook.py
+    Hook->>ENG: 物理強灌「架構師檔案 + 小 PRD + DQA specs」至大腦 Payload
     
-    PM->>Hook: 觸發 verify_spec_approval_hook.py
-    Hook-->>PM: 簽核確認通過
-    
-    PM->>Hook: 觸發 inject_specs_hook.py
-    Hook->>ENG: 物理性強制灌入 specs 至 Agent 大腦
-    
-    loop 寫扣與自我修正
-        ENG->>ENG: 根據 specs 開發與編譯
+    opt 工程師發現三方合約衝突
+        ENG->>PM: 立刻停工並回報衝突 (PRD vs DQA vs Architect)
+        PM->>CEO: 若 PM 無法解決，升級呈報 CEO 裁決
+        CEO-->>PM: 給出裁決方案
+        PM->>DQA: 修改並對齊三方權責合約 (Amend Before Dev)
+        PM->>ENG: 合約修改一致後，重新開工
     end
-    ENG->>PM: 提交交接報告
+
+    loop 沙盒開發
+        ENG->>ENG: 依據強灌之三方 specs 實作與自檢
+    end
     
     PM->>DQA: 請求驗收
-    DQA->>DQA: 根據 specs 情境逐條驗收並打勾 `[x]`
-    DQA->>Hook: 觸發 verify_dqa_checklist_hook.py
-    alt 有項目未勾選 `[ ]`
-        Hook-->>DQA: 亮紅燈，退件禁止提交
-        DQA->>ENG: 退回要求工程師修正
-    else 全數勾選 `[x]`
-        Hook-->>PM: 綠燈放行
-        PM->>PM: 進入 Phase 4 或下個 Milestone
+    DQA->>Hook: 觸發 verify_dqa_checklist_hook.py (確保 100% [x] 打勾)
+    Hook-->>PM: 放行
+    PM->>ENG: 派遣下階段 M<N+1> 工程師
+    par 異步平行作業
+        ENG->>ENG: M<N+1> 工程師開發中...
+        PM->>PM: PM 趁空檔撰寫 M<N> 變更日誌 (PM/Changes/M<N>_Change_Log.md)
     end
 ```
 </details>
 
 <details>
-<summary><b>Phase 4: 成品驗收階段 (點擊展開)</b></summary>
+<summary><b>Phase 4: 全局驗收與發布上線 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant PM as 專案經理 (PM)
-    participant DQA as 品管 (大腦清洗後)
-    participant Arch as 架構師 (Architect)
+    participant SDD as SDD DQA
+    participant TDD as TDD DQA
     participant CEO
     
-    PM->>DQA: 發動全局整合測試與套件收斂
-    DQA->>DQA: SDD DQA 根據 Phase 1 的「開發目的」進行最終覆核
-    DQA->>PM: 測試與覆核通過 (Green Light)
+    PM->>SDD: 喚醒 SDD DQA (導入 Phase 2 審查後的 PRD)
+    PM->>TDD: 喚醒 TDD DQA (全產品端到端系統測試)
     
-    PM->>CEO: 交付執行檔 / 網站連結進行「實機盲測」
-    alt CEO 發現致命錯誤
-        CEO-->>PM: 退回
-        PM->>PM: 呼叫 Log Agent 紀錄退件，退回 Phase 3 重新 DQA
-    else CEO 盲測無誤
-        CEO-->>PM: /approve 簽核放行
-        PM->>PM: 呼叫 release_manager.py (自動合併/Tag/Push)
-        PM->>PM: 正式上線，轉移至 Phase 5
+    par 雙 DQA 全局驗收 (項目上限 50 項，可向 PM 申請核准 2 次)
+        TDD->>TDD: 執行全產品系統級別端到端整合功能測試
+        SDD->>SDD: 覆核 Intent (開發初衷) 與 Non-goals 邊界
     end
+    
+    alt DQA 驗收退件
+        TDD-->>PM: 退回 Phase 3 修正
+    else 雙 DQA 放行
+        SDD-->>PM: 通過放行 (Green Light)
+    end
+    
+    PM->>CEO: 交付成品進行「UAT 實機盲測 (Dogfooding)」
+    CEO-->>PM: /approve 簽核放行
+    PM->>PM: 執行 pre-release.py (全體無異議同意檢查)
+    PM->>PM: 執行 release_manager.py (自動 Merge/Tag/Push)
+    PM->>PM: 執行 phase_gate_hook.py 進入 Phase 5
 ```
 </details>
 
 <details>
-<summary><b>Phase 5: 產品上線後維護 (點擊展開)</b></summary>
+<summary><b>Phase 5: 產品上線後維護與迭代 (點擊展開)</b></summary>
 
 ```mermaid
 sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
     participant Arch as 架構師 (Architect)
-    participant KB as 教訓知識庫
-    CEO->>PM: 詢問架構細節 / 提出新功能需求
-    PM->>Arch: 請求架構師回顧 System Architecture
-    Arch->>KB: 查閱 As-Built Architecture 與 .agents/lessons_learned/DIGEST.md
-    Arch->>PM: 提供現有架構分析與擴充建議
-    PM->>CEO: 解答問題 (化身活體知識庫)
-    opt 若為新功能需求
-        PM->>PM: 帶著繼承的知識，重新發動 Phase 1
-    end
+    participant Logs as Milestone 變更日誌
+    
+    PM->>Arch: 喚醒架構師通盤掃描 src/ 生成 As-Built 報告
+    Arch->>Logs: 讀取 Phase 3 PM 異步變更日誌 (PM/Changes/M<N>_Change_Log.md)
+    Arch->>Arch: 比對 src/ 程式碼內容與變更日誌
+    Note right of Arch: 🛡️ Code Truth Precedence Rule:<br/>若報告與代碼不符，強制以 src/ 實體代碼為準！
+    Arch->>PM: 產出 Architect/As_Built_Architecture.md
+    PM->>PM: 執行 verify_architecture_report_hook.py 驗證品質
+    PM->>CEO: 充當系統活體知識庫提供解答/發動新迭代
 ```
 </details>
 
@@ -271,11 +272,10 @@ sequenceDiagram
 sequenceDiagram
     actor CEO
     participant PM as 專案經理 (PM)
-    participant KB as 教訓知識庫
+    participant Subagents as 全體子代理人
     CEO->>PM: 宣告專案結案 / 準備移交
-    PM->>KB: 統整所有知識與血淚史
     PM->>PM: 產出 Project_Handover_Manual.md (交接手冊)
-    PM->>PM: kill_all 徹底終止並釋放所有子代理人
+    PM->>Subagents: 執行 manage_subagents (action=kill_all) 銷毀所有子代理人
     PM->>PM: 於 Master_Log.md 寫下最終結案紀錄 (墓誌銘)
     PM->>CEO: 報告封裝完畢，準備斷線休眠
 ```
@@ -385,4 +385,5 @@ sequenceDiagram
 * `/references/phases`：SOP 與各階段的標準作業程序規範。
 
 ---
+
 *Built for the future of Autonomous Software Development.*

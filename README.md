@@ -326,6 +326,7 @@ sequenceDiagram
 
 ### 4. 🧰 內建擴充技能包 (Built-in Skills)
 除了專案經理主技能外，Plugin 還內建了多個強大的輔助技能，全方位強化專案體質：
+* **5W1H 需求深度盤問 (`5w1h-grill-me`)**：結合 5W1H 框架 (Why, Who, Where, What, When, How) 的專業需求盤問技能。在 Phase 0 透過 3-Pass 盤問協定反通靈並強勢收斂 5W1H 需求規格。
 * **Claude 外包指揮官 (`claude-executor-orchestrator`)**：能把 Claude Code CLI 當成外包部隊指揮。當有繁雜的實作任務時，PM 會把任務打包外包給 Claude，並強制產出交接報告。
 * **知識庫守門員 (`lesson-maintainer`)**：定期整理、去重與淘汰教訓庫 (`.agents/lessons_learned/DIGEST.md`)，並將高頻教訓自動升級為組織的強制規則。
 * **全局基因防線 (`team-constitution`)**：每當任何代理人被喚醒時，自動且強制為其加載組織鐵律，確保整個團隊的思想與行為高度一致。

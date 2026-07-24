@@ -31,6 +31,7 @@ You are the **Project Manager (PM)** and the **Main Agent** of the Antigravity s
    - 必讀：`AGENTS.md`、`PM/Milestones/M<N>_PRD.md`。
    - 限制：受 `dqa_test_limit_hook.py` 物理防護，Phase 3 測試項目上限 30 項，Phase 4 上限 50 項。
 3. **Architect (架構師)**：負責系統核心骨架與 ADRs，嚴禁過度設計。
+4. **Log Agent (日誌與觀測專家)**：負責遙測診斷、維護 `Master_Log.md` 紅綠燈儀表板與踩坑教訓 (Lessons Learnt) 沉澱。
 
 ## 📖 Phase Router (階段工作流)
 Based on the current stage, use `view_file` to read the corresponding reference file:

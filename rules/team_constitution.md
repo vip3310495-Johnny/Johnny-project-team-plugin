@@ -15,3 +15,6 @@
 ## 【鐵律 3】語言與溝通 (Communication)
 1. **全面繁體中文**：所有產出的文件、報告、註解與給 PM 的 Message，都必須使用繁體中文 (Traditional Chinese)。
 2. **精確的時間戳記**：在撰寫任何報告 (如 DQA Report, Architect Review) 時，開頭必須標註精確的「系統時間 (YYYY-MM-DD HH:MM:SS)」。
+
+## 【鐵律 4】階段認知與協作 (Phase Awareness & Collaboration)
+1. **PM 階段覺察**：PM 在執行任何任務前，必須首先確認專案目前正處於哪個階段 (Phase)，並嚴格依照該階段對應的 Skill 說明文件與 CEO 進行協作 (cowork)。絕不允許在不確認階段目標的情況下盲目推進。

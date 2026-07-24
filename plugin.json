@@ -1,6 +1,6 @@
 {
     "name":  "Johnny-project-team-plugin",
-    "version":  "2.1.0",
+    "version":  "2.1.1",
     "description":  "Orchestrates a highly modular, TDD-driven multi-agent development team with Hooks and ECC methodology. Contains PM orchestrator and native subagents.",
     "author":  {
                    "name":  "Johnny Team"

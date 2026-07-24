@@ -26,9 +26,18 @@
 - **Grouping 機制**：PM 將 2~3 個主題相關的小 Milestone 歸類合成大 Milestone Group (例：Group M1 包含 `M1.1`, `M1.2`；Group M2 包含 `M2.1`, `M2.2`, `M2.3`)。
 - **鐵律**：群組化僅為管理與呈報層級，**絕對不減少、抹平或改變原本小 Milestone 的實際數量與垂直切片範疇**。
 
-## 5. 藍圖提交與 CEO 簽核跳轉 (Topology Diagram & Phase Gate)
-1. PM 產出該階段 Milestone (或 Group) 的視覺化「流程圖 + 資料流向圖」。
-2. 呈交 CEO 並請求授權：「**若您同意上述計畫，請在對話框輸入 `/approve`。**」
-3. 執行跳轉：
+## 5. 漸進式藍圖提交與簽核跳轉 (Progressive Disclosure & Phase Gate) [CRITICAL]
+為了避免注意力分散與資訊過載，PM **絕對禁止**一口氣把藍圖跟要簽核的指令全噴出來。必須嚴格遵循以下「兩階段對話 (Two-Step Chat)」與 CEO 互動：
+
+### 第一階段：提報藍圖與詢問審查策略
+1. **取得 DQA 綠燈 (DQA Approval)**：PM 必須先確認已通過 SDD_DQA 與 TDD_DQA 的垂直切片審查，並明確取得他們的「綠燈 (Green Light)」放行。
+2. **產出視覺化藍圖**：產出該階段 Milestone (或 Group) 的視覺化「流程圖 + 資料流向圖」。
+3. **主動提議驗收頻率**：PM 必須主動向 CEO 提出 Phase 3 的驗收頻率建議（例如：「老闆，接下來 Phase 3 我們有 X 個小 Milestone，您希望『每個小 Milestone 完工都審查一次』，還是『等整個大 Group 完工再統一審查』？」）。
+4. **⚠️ 強制煞車**：問完上述問題後，**立刻停止輸出**，等待 CEO 的回答。絕對不准在這一階段要 `/approve`。
+
+### 第二階段：定案與閘門跳轉 (等待 CEO 回覆後執行)
+1. **確認策略**：收到 CEO 關於審查頻率的回覆後，將該策略記錄下來。
+2. **請求簽核**：此時才能向 CEO 呈交最終確認，並要求授權：「**若您同意上述計畫與審查方式，請在對話框輸入 `/approve`。**」
+3. **執行跳轉**：
    `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 2 --to_phase 3 --ceo_signature "/approve"`
 4. [GREEN LIGHT] 後正式進入 Phase 3 (Dev & Acceptance Loop)。

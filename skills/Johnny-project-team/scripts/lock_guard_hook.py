@@ -33,8 +33,19 @@ def main():
         sys.exit(0)
 
     norm_target = os.path.normpath(target_file).replace("\\", "/")
+
+    # PM 物理剝奪對 specs/ (合約目錄) 的寫入權限防線
+    if norm_target.startswith("specs/") or "/specs/" in norm_target or norm_target.startswith(".agents/specs/"):
+        if os.environ.get("DQA_WRITE_SPECS") != "1" and os.environ.get("SKIP_PATH_GUARD") != "1":
+            print("\n[FAIL] 🛑 物理限制攔截 (lock_guard_hook - specs 防護網):")
+            print(f"偵測到試圖寫入/修改合約檔案: {norm_target}")
+            print("PM (主大腦) 已被物理剝奪對 `specs/` (BDD 驗收合約目錄) 的直接寫入權限！")
+            print("【防僭越鐵律】：`specs/` 為 DQA (SDD_DQA / TDD_DQA) 的專屬權責合約區。PM 嚴禁親自編修。")
+            print("👉 請 PM 使用 `invoke_subagent` 委派 SDD_DQA 或 TDD_DQA 子代理人進行合約擬定與更新！\n")
+            sys.exit(1)
+
     if not norm_target.endswith(".agents/.current_phase.lock"):
-        # 不是在寫入鎖檔，直接放行
+        # 不是在寫入鎖檔或 specs/，直接放行
         sys.exit(0)
 
     print(f"[HOOK] 🛡️ 偵測到試圖修改階段鎖檔: {norm_target}")

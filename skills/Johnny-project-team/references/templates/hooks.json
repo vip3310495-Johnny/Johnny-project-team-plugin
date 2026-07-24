@@ -75,6 +75,16 @@
         "replace_file_content"
       ],
       "command": "python .agents/skills/Johnny-project-team/scripts/dqa_test_limit_hook.py"
+    },
+    {
+      "name": "Verify Log Updated Inspector",
+      "event": "AfterTool",
+      "tools": [
+        "run_command",
+        "write_to_file",
+        "replace_file_content"
+      ],
+      "command": "python .agents/skills/Johnny-project-team/scripts/verify_log_updated_hook.py"
     }
   ]
 }

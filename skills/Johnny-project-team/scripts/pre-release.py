@@ -2,6 +2,7 @@ import argparse
 import sys
 import json
 import datetime
+import os
 
 # [AUTO-IMPLEMENTED] pre-release
 # 此腳本由 Antigravity 共通框架自動生成，具備基礎 I/O 與 Log 拋轉能力。

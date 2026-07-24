@@ -14,7 +14,8 @@
   3. SDD DQA PASS (檢查對應的 `sdd_spec.md` 是否驗收完畢，無遺漏之 `[ ]`)
   4. TDD DQA PASS (檢查對應的 `tdd_spec.md` 是否驗收完畢)
   5. Claude DQA PASS (若有觸發，檢查審查報告是否存在)
-  6. CEO Approve 狀態 (腳本需能判斷若目前處於 `/goal` 全自動模式則印出 `[x] CEO 自動打勾`，否則印出 `[ ] 等待 CEO 手動簽核`)
+  6. 上一個 Milestone 細部變更日誌摘要 (檢查 `PM/Changes/M<N>_Change_Log.md` 是否已更新/生成)
+  7. CEO Approve 狀態 (腳本需能判斷若目前處於 `/goal` 全自動模式則印出 `[x] CEO 自動打勾`，否則印出 `[ ] 等待 CEO 手動簽核`)
 
 ## 2. BDD 驗收合約與測試項目審核 (BDD Acceptance Contract & Review)
 - PM 喚醒 `SDD_DQA` 與 `TDD_DQA` 產出合約檔案 `specs/sdd_spec.md` 與 `specs/tdd_spec.md`。

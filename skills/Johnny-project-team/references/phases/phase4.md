@@ -6,7 +6,7 @@
 
 ## 1. 雙 DQA 全局覆核與全產品功能測試 (Dual DQA Full-Product System Testing)
 - PM 強制喚醒 **`SDD_DQA`** 與 **`TDD_DQA`**，並導入 **Phase 2 審查後的 PRD (`PM/Phase2_Reviewed_PRD.md`)**。
-- **客製化發布檢核腳本撰寫 (Custom Release Check Script) [CRITICAL]**：PM 必須在 Phase 4 開頭，負責撰寫一支專屬於該 Phase 4 的 Python 驗證腳本存至 `PM/Scripts/verify_Phase4.py`。該腳本必須能**物理檢查**以下項目的完成度（注意：Phase 4 不需要檢查流程圖與資料流向圖）：
+- **客製化發布檢核腳本撰寫 (Custom Release Check Script)**：PM 必須在 Phase 4 開頭，負責撰寫一支專屬於該 Phase 4 的 Python 驗證腳本存至 `PM/Scripts/verify_Phase4.py`。該腳本必須能**物理檢查**以下項目的完成度（注意：Phase 4 不需要檢查流程圖與資料流向圖）：
   1. SDD DQA PASS (檢查對應的 `sdd_spec.md` 是否驗收完畢，無遺漏之 `[ ]`)
   2. TDD DQA PASS (檢查對應的 `tdd_spec.md` 是否驗收完畢)
   3. Claude DQA PASS (若有觸發，檢查審查報告是否存在)

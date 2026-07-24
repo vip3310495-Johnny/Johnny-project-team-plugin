@@ -37,15 +37,12 @@ def main():
         shutil.copytree(src_skills, dest_skills, dirs_exist_ok=True)
         print(f"[INFO] 佈署 skills 至: {dest_skills}")
         
-    # Copy rules folder
-    if os.path.exists(src_rules):
-        shutil.copytree(src_rules, dest_rules, dirs_exist_ok=True)
-        print(f"[INFO] 佈署 rules 至: {dest_rules}")
-        
-    # Copy AGENTS.md
+    # Copy AGENTS.md (Layer 1 Global Rules)
+    dest_dot_agents_md = os.path.join(dest_agents_dir, "AGENTS.md")
     if os.path.exists(src_agents_md):
         shutil.copy2(src_agents_md, dest_agents_md)
-        print(f"[INFO] 佈署 AGENTS.md 至: {dest_agents_md}")
+        shutil.copy2(src_agents_md, dest_dot_agents_md)
+        print(f"[INFO] 佈署 Layer 1 全域鐵律 (AGENTS.md) 至專案根目錄與 .agents/")
 
     # Copy hooks.json
     if os.path.exists(src_hooks_json):

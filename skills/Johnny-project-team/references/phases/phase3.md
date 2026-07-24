@@ -7,7 +7,7 @@
 ## 1. 微觀規格擬定 (Milestone PRD Generation)
 - **架構對齊**：PM 必須**讀取架構師檔案 (`System_Architecture.md` / ADRs)**。
 - **PRD 產出**：PM 依據架構邊界與 Milestone 範疇產出微觀實體檔案 `PM/Milestones/M<N>_PRD.md`，作為 DQA 撰寫驗收合約之基準。
-- **CEO 驗證計畫 (CEO Verification Plan) [CRITICAL]**：PM 必須在該 PRD 中加入專屬段落，預先規劃並建議「CEO 手動驗證的步驟與方式」，讓 CEO 屆時能親身體驗並驗收該 Milestone 功能。
+- **CEO 驗證計畫 (CEO Verification Plan)**：PM 必須在該 PRD 中加入專屬段落，預先規劃並建議「CEO 手動驗證的步驟與方式」，讓 CEO 屆時能親身體驗並驗收該 Milestone 功能。
 - **客製化交付檢核腳本撰寫 (Custom Delivery Check Script) [CRITICAL]**：為了防止團隊成員變動導致的認知斷層，PM 必須在 Phase 3 開頭，負責撰寫一支專屬於該 Milestone 的 Python 驗證腳本存至 `PM/Scripts/verify_M<N>.py`。該腳本必須能**物理檢查**以下項目的存在與完成度：
   1. 流程圖 (Flowchart) 實體檔案是否存在 (如 `.mmd`)
   2. 資料流向圖 (Data Flow Diagram) 實體檔案是否存在
@@ -40,7 +40,7 @@
 - **階層排解與 CEO 升級**：
   - PM 優先進行協調與排解。
   - 若 PM 無法決定，PM **必須立刻呈報 CEO 請求終極裁決**。
-- **修合約再開工鐵律 (Amend Before Dev)**：衝突裁決後，PM **必須先指示相關角色 (Architect / PM / DQA) 修改並更新其權責合約與文檔**，確保三方合約 100% 一致後，**才允許指示 Engineer 重新開工**！
+- **修合約再開工 (Amend Before Dev)**：衝突裁決後，PM **必須先指示相關角色 (Architect / PM / DQA) 修改並更新其權責合約與文檔**，確保三方合約 100% 一致後，**才允許指示 Engineer 重新開工**！
 
 ## 6. 沙盒開發與防護網 (Sandboxed Execution & AgentShield)
 - Engineer 在隔離沙盒 (Branch Workspace) 依據強灌之三方 specs 進行代碼實作。
@@ -56,7 +56,7 @@
 ## 8. Milestone 提報、CEO 手動驗證與平行流水線 (CEO Verification & Parallel Pipeline) [CRITICAL]
 當內部與外部驗收皆通過後，PM 必須向 CEO 提報完工並進入平行流水線：
 1. **準備測試環境 (Test Environment Setup)**：在請 CEO 體驗前，PM 必須確保專案能在 CEO 本機端順利運行。若有需要，PM 應透過終端機執行開發伺服器啟動指令 (如 `npm run dev`, `python app.py` 等)，讓 CEO 可以直接打開瀏覽器或 App 進行測試。
-2. **執行客製化交付檢核腳本 (Execute Custom Delivery Check Script) [CRITICAL]**：PM 在提報前，必須強制執行在第一步產出的 `python PM/Scripts/verify_M<N>.py`。
+2. **執行客製化交付檢核腳本 (Execute Custom Delivery Check Script)**：PM 在提報前，必須強制執行在第一步產出的 `python PM/Scripts/verify_M<N>.py`。
    - 腳本將會自動印出完整的 Delivery Checklist，確認 流程圖、資料流向圖、SDD/TDD/Claude DQA 等內部關卡皆已亮綠燈。
    - 嚴禁 PM 自行捏造 Check list，必須原封不動將腳本物理掃描後輸出的結果呈現給 CEO。
 3. **CEO 手動體驗提報**：PM 調出 `M<N>_PRD.md` 中的「CEO 驗證計畫」，將具體的測試步驟與 URL，連同剛剛腳本印出的 Checklist 一併呈現給 CEO，**強烈建議 CEO 親自手動驗證**。

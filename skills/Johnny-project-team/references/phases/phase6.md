@@ -8,7 +8,7 @@
 - PM 彙整 `.agents/lessons_learned/DIGEST.md` 與最新 `As_Built_Architecture.md`。
 - **Handover Manual**：輸出人類高度友善之 `Project_Handover_Manual.md` (專案交接手冊)，確保新維運團隊 1 小時內掌握系統拓撲與防踩坑指南。
 
-## 2. 子代理人銷毀與資源釋放 (Subagent Termination & Cleanup) [CRITICAL]
+## 2. 子代理人銷毀與資源釋放 (Subagent Termination & Cleanup)
 - PM 執行子代理人終止命令：
   使用 `manage_subagents` 工具 (Action: `kill_all`) 強制銷毀所有背景運作之 Engineer、DQA 與 Architect 子代理人。
 - 徹底清理隔離沙盒與背景程序，歸還計算資源。

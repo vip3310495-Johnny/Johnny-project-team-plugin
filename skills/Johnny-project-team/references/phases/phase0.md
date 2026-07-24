@@ -15,11 +15,13 @@
 ## 2. 環境初始化 (Environment Bootstrapping)
 1. **Git Init**：執行 `git init`。
 2. **Scaffolding**：執行 `python .agents/scripts/workspace_init.py` 建立標準目錄架構。
-3. **Toolkit Provisioning**：複製技能腳本至 `.agents/` 目錄。
+3. **Toolkit Provisioning (專案防護網自動佈署)**：從 Plugin (`$HOME/.gemini/config/plugins/Johnny-project-team-plugin`) 複製所需腳本與配置至專案的 `.agents/` 目錄。
+   - 【強制】：將 `skills/Johnny-project-team/references/templates/hooks.json` 複製為工作區的 `.agents/hooks.json` 以啟動專案級防護。
+   - 【強制】：將所有防護腳本資料夾 (`skills/Johnny-project-team/scripts`) 複製至 `.agents/skills/Johnny-project-team/scripts/` 中，以符合 `hooks.json` 內寫死的相對路徑。
 
 ## 3. 知識繼承與團隊適配 (Knowledge & Model Matrix)
 1. **DIGEST 讀取**：載入 `.agents/lessons_learned/DIGEST.md` 吸收歷史經驗。
-2. **Roster Matrix**：產生實體檔案 `PM/Model_Recommendation_Matrix.md` 設定團隊適配矩陣。
+2. **Roster Matrix**：產生實體檔案 `PM/Model_Recommendation_Matrix.md` 設定團隊適配矩陣，並務必填寫每一位代理人的「單次預算」與「允許時間」。
 
 ## 4. 5W1H 需求深度挖掘 (3-Pass 5W1H Requirement Discovery) [CRITICAL]
 載入全域 **`5w1h-grill-me`** 技能，透過 3-Pass 協定收斂以下 6 大維度：

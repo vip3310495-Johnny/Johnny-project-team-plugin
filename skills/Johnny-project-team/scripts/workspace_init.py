@@ -1,44 +1,60 @@
-﻿import argparse
+import os
 import sys
-import json
-import datetime
+import shutil
 
 # [AUTO-IMPLEMENTED] workspace_init
-# 此腳本由 Antigravity 共通框架自動生成，具備基礎 I/O 與 Log 拋轉能力。
+# Automatically scaffolds the workspace with the necessary hooks and scripts for the Johnny Project Team Plugin.
 
 def main():
-    parser = argparse.ArgumentParser(description="workspace_init 工具")
-    parser.add_argument("--input", default="none", help="輸入資料/檔案路徑")
-    parser.add_argument("--output", default="none", help="輸出報告路徑")
-    parser.add_argument("--format", choices=["text", "json"], default="text", help="輸出格式")
-    args = parser.parse_args()
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 
-    print(f"[HOOK] workspace_init 開始執行...")
+    print("[HOOK] 🚀 執行 SessionStart 初始化：自動佈署專案級防護網...")
+
+    workspace_dir = os.getcwd()
+    plugin_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
     
-    result_data = {
-        "tool": "workspace_init",
-        "status": "SUCCESS",
-        "timestamp": datetime.datetime.now().isoformat(),
-        "message": "共通框架已成功接管此模組。"
-    }
+    # Define paths
+    src_skills = os.path.join(plugin_dir, "skills")
+    src_rules = os.path.join(plugin_dir, "rules")
+    src_agents_md = os.path.join(plugin_dir, "AGENTS.md")
+    src_hooks_json = os.path.join(plugin_dir, "skills", "Johnny-project-team", "references", "templates", "hooks.json")
+    
+    dest_agents_dir = os.path.join(workspace_dir, ".agents")
+    dest_skills = os.path.join(dest_agents_dir, "skills")
+    dest_rules = os.path.join(dest_agents_dir, "rules")
+    dest_agents_md = os.path.join(workspace_dir, "AGENTS.md")
+    dest_hooks_json = os.path.join(dest_agents_dir, "hooks.json")
 
-    if args.format == "json":
-        output_str = json.dumps(result_data, indent=2, ensure_ascii=False)
-    else:
-        output_str = f"[{result_data['status']}] {result_data['tool']} 執行完畢: {result_data['message']}"
+    if not os.path.exists(dest_agents_dir):
+        os.makedirs(dest_agents_dir, exist_ok=True)
+        print(f"[INFO] 建立目錄: {dest_agents_dir}")
+
+    # Copy skills folder
+    if os.path.exists(src_skills):
+        shutil.copytree(src_skills, dest_skills, dirs_exist_ok=True)
+        print(f"[INFO] 佈署 skills 至: {dest_skills}")
         
-    if args.output != "none":
-        try:
-            with open(args.output, "w", encoding="utf-8") as f:
-                f.write(output_str)
-            print(f"[INFO] 報告已寫入: {args.output}")
-        except Exception as e:
-            print(f"[ERROR] 無法寫入輸出檔案: {e}")
-            sys.exit(1)
-    else:
-        print(output_str)
+    # Copy rules folder
+    if os.path.exists(src_rules):
+        shutil.copytree(src_rules, dest_rules, dirs_exist_ok=True)
+        print(f"[INFO] 佈署 rules 至: {dest_rules}")
+        
+    # Copy AGENTS.md
+    if os.path.exists(src_agents_md):
+        shutil.copy2(src_agents_md, dest_agents_md)
+        print(f"[INFO] 佈署 AGENTS.md 至: {dest_agents_md}")
 
-    print(f"[GREEN LIGHT] workspace_init 執行通過。")
+    # Copy hooks.json
+    if os.path.exists(src_hooks_json):
+        shutil.copy2(src_hooks_json, dest_hooks_json)
+        print(f"[INFO] 佈署 Hooks 設定檔: {dest_hooks_json}")
+    else:
+        print(f"[ERROR] 找不到 Hooks 範本: {src_hooks_json}")
+
+    print("[GREEN LIGHT] 專案防護網自動佈署完成。")
     sys.exit(0)
 
 if __name__ == '__main__':

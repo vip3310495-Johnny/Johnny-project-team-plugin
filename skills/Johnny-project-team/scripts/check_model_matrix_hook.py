@@ -29,7 +29,7 @@ def main():
         print(f"未偵測到團隊 AI 模型適配矩陣 `PM/Model_Recommendation_Matrix.md`！")
         print("請 PM 於專案初始化 (Phase 0) 時引導設定：")
         print(" 1. 複製 `.agents/skills/Johnny-project-team/references/templates/Model_Recommendation_Matrix.md`")
-        print(" 2. 在工作區產出實體檔案 `PM/Model_Recommendation_Matrix.md` 並列表向 CEO 推薦各角色適用模型。")
+        print(" 2. 在工作區產出實體檔案 `PM/Model_Recommendation_Matrix.md`，列表推薦各角色適用模型，並確實填寫「單次預算」與「允許時間」。")
         print("="*70 + "\n")
         # SessionStart 拋出提示訊息但不強制硬性死鎖 session 建立
         sys.exit(0)

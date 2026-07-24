@@ -3,6 +3,11 @@
   "description": "Antigravity Plugin Native Hooks Configuration",
   "hooks": [
     {
+      "name": "Auto Load Rules on Session Start",
+      "event": "SessionStart",
+      "command": "python .agents/skills/Johnny-project-team/scripts/auto_load_rules_hook.py"
+    },
+    {
       "name": "Check Model Matrix Readiness",
       "event": "SessionStart",
       "command": "python .agents/skills/Johnny-project-team/scripts/check_model_matrix_hook.py"
@@ -10,43 +15,65 @@
     {
       "name": "Lock File Guard (Phase 1~6 Gate Protection)",
       "event": "BeforeTool",
-      "tools": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
+      "tools": [
+        "write_to_file",
+        "replace_file_content",
+        "multi_replace_file_content"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/lock_guard_hook.py"
     },
     {
       "name": "Path Guard (Directory Isolation)",
       "event": "BeforeTool",
-      "tools": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
+      "tools": [
+        "write_to_file",
+        "replace_file_content",
+        "multi_replace_file_content"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/path_guard.py"
     },
     {
       "name": "Agent Shield (Security Scanner)",
       "event": "BeforeTool",
-      "tools": ["run_command", "write_to_file"],
+      "tools": [
+        "run_command",
+        "write_to_file"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/agent_shield_hook.py"
     },
     {
       "name": "Pre-Release Unanimous Consent Check",
       "event": "BeforeTool",
-      "tools": ["run_command"],
+      "tools": [
+        "run_command"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/pre-release.py"
     },
     {
       "name": "Architecture Report Inspector",
       "event": "AfterTool",
-      "tools": ["write_to_file", "replace_file_content"],
+      "tools": [
+        "write_to_file",
+        "replace_file_content"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/verify_architecture_report_hook.py"
     },
     {
       "name": "DQA Checklist Inspector",
       "event": "AfterTool",
-      "tools": ["write_to_file", "replace_file_content"],
+      "tools": [
+        "write_to_file",
+        "replace_file_content"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/verify_dqa_checklist_hook.py"
     },
     {
       "name": "DQA Test Item Limit Guard (Phase 3 <= 30, Phase 4 <= 50)",
       "event": "AfterTool",
-      "tools": ["write_to_file", "replace_file_content"],
+      "tools": [
+        "write_to_file",
+        "replace_file_content"
+      ],
       "command": "python .agents/skills/Johnny-project-team/scripts/dqa_test_limit_hook.py"
     }
   ]

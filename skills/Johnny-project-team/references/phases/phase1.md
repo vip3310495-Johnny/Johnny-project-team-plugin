@@ -21,8 +21,14 @@
 1. **取得架構師綠燈 (Architect Approval) [CRITICAL]**：PM 必須先與 Architect 確認架構無誤，並明確取得 Architect 的「綠燈 (Green Light)」放行。若無 Architect 綠燈，PM **絕對禁止**向 CEO 提案。
 2. PM 向 CEO 報告總體架構藍圖與潛在風險，並聲明已取得 Architect 放行。
 3. **簽核授權**：請求 CEO 輸入 `/approve` 授權跳轉。
-4. **Domain Rule Auto-Injection (領域規則自動注入) [CRITICAL]**：
-   - 依據 Architect 確立的技術棧 (如 Python/React)，讀取 `.agents/skills/Johnny-project-team/references/rules/` 對應語言/框架規則，**附加寫入 (Append)** 至專案根目錄 `.agents/AGENTS.md`，使全體子代理人自動繼承開發鐵律。
-4. **執行跳轉**：PM 強制執行階段閘門腳本：
+4. **Layer 2 Domain Rule Auto-Injection (技術棧雙軌規則動態生成) [CRITICAL]**：
+   - 取得授權後，PM **必須主動執行腳本**，將 Architect 確立的技術棧規則精準拆解為 Layer 2 獨立檔案。
+   - **完全與 Layer 1 (AGENTS.md) 分開**，保持 Layer 1 純淨獨立。
+   - 執行命令 (帶入架構師確立的語言，如 python)：
+     `python .agents/skills/Johnny-project-team/scripts/auto_load_rules_hook.py --tech_stack <對應語言>`
+   - 腳本將會在 `.agents/rules/` 目錄中自動產出帶有 YAML Header 的雙軌規範：
+     1. `.agents/rules/dev_rules.md` (寫 Code 專屬規範)
+     2. `.agents/rules/review_rules.md` (Review/驗收專屬規範)
+5. **執行跳轉**：PM 強制執行階段閘門腳本：
    `python .agents/skills/Johnny-project-team/scripts/phase_gate_hook.py --from_phase 1 --to_phase 2 --ceo_signature "/approve"`
-5. [GREEN LIGHT] 後正式進入 Phase 2。
+6. [GREEN LIGHT] 後正式進入 Phase 2。

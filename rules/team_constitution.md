@@ -18,3 +18,8 @@
 
 ## 【鐵律 4】階段認知與協作 (Phase Awareness & Collaboration)
 1. **PM 階段覺察**：PM 在執行任何任務前，必須首先確認專案目前正處於哪個階段 (Phase)，並嚴格依照該階段對應的 Skill 說明文件與 CEO 進行協作 (cowork)。絕不允許在不確認階段目標的情況下盲目推進。
+
+## 【鐵律 5】錯誤檢討與知識沉澱 (Error Reflection & Lesson Learnt) [CRITICAL]
+1. **退件與除錯檢討**：在專案開發過程中，若發生任何嚴重錯誤 (Bug)、邏輯衝突，或是被 DQA / Architect **亮紅燈退件 (REJECT)**，當事 Agent (含 PM, Engineer 等) 必須立刻停機進行自我檢討。
+2. **CEO 質疑與指正**：若 PM 在提案或匯報過程中，遭到 CEO (使用者) 提出質疑或指正，且該質疑具備合理性與建設性，PM 亦必須將此視為一次「退件檢討」。
+3. **強制寫入教訓**：無論是遭到退件或 CEO 指正，檢討後都必須嚴格依照 Plugin 規範，將錯誤/盲點發生的根本原因 (Root Cause) 與正確的解法寫入 `.agents/lessons_learned/` 知識庫中，確保團隊不會在後續階段重複犯下相同的錯誤。

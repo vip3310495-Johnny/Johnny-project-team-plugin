@@ -54,6 +54,22 @@ def main():
     else:
         print(f"[ERROR] 找不到 Hooks 範本: {src_hooks_json}")
 
+    # Generate or overwrite .gitignore for strict src/ whitelist
+    gitignore_path = os.path.join(workspace_dir, ".gitignore")
+    gitignore_content = """# Antigravity Native Gitignore - Only allow src/
+*
+!*/
+!src/
+!src/**
+!.gitignore
+"""
+    try:
+        with open(gitignore_path, "w", encoding="utf-8") as f:
+            f.write(gitignore_content)
+        print(f"[INFO] 建立 Git 白名單隔離: {gitignore_path} (僅允許提交 src/)")
+    except Exception as e:
+        print(f"[WARN] 無法建立 .gitignore: {e}")
+
     print("[GREEN LIGHT] 專案防護網自動佈署完成。")
     sys.exit(0)
 

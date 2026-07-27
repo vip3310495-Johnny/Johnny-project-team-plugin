@@ -56,7 +56,7 @@ graph TD
         Eng --> Shield{"AgentShield Hook<br/>(攔截高危指令/密碼)"}:::security
         Shield -- 失敗 (Autofix) --> Eng
         Shield -- 通過 --> Smoke[工程師自檢編譯]
-        Smoke --> DQA_Check["DQA 物理勾選驗收<br/>(verify_dqa_checklist_hook)"}:::ecc
+        Smoke --> DQA_Check["DQA 物理勾選驗收<br/>(verify_dqa_checklist_hook)"]:::ecc
         DQA_Check -- "[ ] 未打勾退回" --> Eng
         DQA_Check -- "[x] 100% 打勾" --> Claude["Claude DQA 外部獨立審查"]:::agent
         Claude -- 退回 --> Eng

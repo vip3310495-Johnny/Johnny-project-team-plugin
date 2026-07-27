@@ -13,6 +13,24 @@ def print_error(msg):
 def print_success(msg):
     print(f"🟢 [PASSED] {msg}")
 
+def _can_read_stdin():
+    if sys.stdin.isatty():
+        return False
+    if sys.platform.startswith("win"):
+        try:
+            import ctypes, ctypes.wintypes
+            h = ctypes.windll.kernel32.GetStdHandle(-10)
+            a = ctypes.wintypes.DWORD()
+            return ctypes.windll.kernel32.PeekNamedPipe(h, None, 0, None, ctypes.byref(a), None) != 0 and a.value > 0
+        except Exception:
+            return False
+    else:
+        try:
+            import select
+            return select.select([sys.stdin], [], [], 0)[0] != []
+        except Exception:
+            return False
+
 def main():
     parser = argparse.ArgumentParser(description="Verify the As-Built Architecture Report.")
     parser.add_argument(
@@ -28,7 +46,7 @@ def main():
     # 若未指定 CLI 參數，試圖從 stdin 讀取 JSON (AfterTool Hook 相容)
     if not filepath:
         try:
-            if not sys.stdin.isatty():
+            if _can_read_stdin():
                 import json
                 input_data = sys.stdin.read()
                 if input_data:

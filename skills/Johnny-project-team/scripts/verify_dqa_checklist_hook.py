@@ -3,6 +3,24 @@ import sys
 import argparse
 import re
 
+def _can_read_stdin():
+    if sys.stdin.isatty():
+        return False
+    if sys.platform.startswith("win"):
+        try:
+            import ctypes, ctypes.wintypes
+            h = ctypes.windll.kernel32.GetStdHandle(-10)
+            a = ctypes.wintypes.DWORD()
+            return ctypes.windll.kernel32.PeekNamedPipe(h, None, 0, None, ctypes.byref(a), None) != 0 and a.value > 0
+        except Exception:
+            return False
+    else:
+        try:
+            import select
+            return select.select([sys.stdin], [], [], 0)[0] != []
+        except Exception:
+            return False
+
 def main():
     parser = argparse.ArgumentParser(description="Phase 3 驗證 DQA TO-DO 清單是否全數驗收")
     parser.add_argument("--specs_dir", default="specs", help="specs 資料夾相對路徑")
@@ -12,7 +30,7 @@ def main():
 
     # 若由 AfterTool Hook 觸發，僅針對 specs/ 目錄下的修改進行檢驗
     try:
-        if not sys.stdin.isatty():
+        if _can_read_stdin():
             import json
             input_data = sys.stdin.read()
             if input_data:

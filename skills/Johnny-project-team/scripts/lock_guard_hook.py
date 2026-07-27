@@ -11,6 +11,24 @@ except Exception:
 # Lock File Protection Hook (BeforeTool Hook for Phase 1~6 Gate Security)
 # 確保 Phase 1~6 任何 Agent 試圖修改 .agents/.current_phase.lock 時，必須已過 phase_gate_hook.py 驗證
 
+def _can_read_stdin():
+    if sys.stdin.isatty():
+        return False
+    if sys.platform.startswith("win"):
+        try:
+            import ctypes, ctypes.wintypes
+            h = ctypes.windll.kernel32.GetStdHandle(-10)
+            a = ctypes.wintypes.DWORD()
+            return ctypes.windll.kernel32.PeekNamedPipe(h, None, 0, None, ctypes.byref(a), None) != 0 and a.value > 0
+        except Exception:
+            return False
+    else:
+        try:
+            import select
+            return select.select([sys.stdin], [], [], 0)[0] != []
+        except Exception:
+            return False
+
 def main():
     parser = argparse.ArgumentParser(description="Lock File Guard Hook")
     parser.add_argument("--target_file", default=None, help="目標修改檔案路徑")
@@ -20,7 +38,7 @@ def main():
     target_file = args.target_file
     if not target_file:
         try:
-            if not sys.stdin.isatty():
+            if _can_read_stdin():
                 input_data = sys.stdin.read()
                 if input_data:
                     payload = json.loads(input_data)

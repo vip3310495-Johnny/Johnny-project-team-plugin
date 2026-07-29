@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "rules_version": "2026-07-28",
+  "required": [
+    "JOHNNY_PROJECT_RULES.md",
+    ".johnny/state.json",
+    ".johnny/config.json"
+  ],
+  "routes": {
+    "phase": "active Phase reference under the johnny-project-team skill",
+    "role": "matching .codex/agents/johnny-*.toml profile",
+    "ticket": "active Task Context Pack",
+    "technology": "only references matching changed product paths"
+  },
+  "model_matrix": "PM/Model_Recommendation_Matrix.md",
+  "task_context_pack": "PM/Context/<ticket-id>.md"
+}

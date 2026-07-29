@@ -2,6 +2,13 @@
 
 歡迎來到 **Johnny-Project-Team Plugin**！我們非常高興能與您一起打造這個開源專案。
 
+## 先選擇版本
+
+- Antigravity Edition 的變更留在 Repository 根目錄。
+- Codex Edition 的變更只能放在 `codex/`，並遵循
+  [`codex/CONTRIBUTING.md`](codex/CONTRIBUTING.md)。
+- 不要讓單一 PR 同時修改兩個 Edition，除非變更內容只是版本導覽或共同授權文件。
+
 ## 🎯 我們的核心使命
 
 在您準備發起 Pull Request (PR) 前，請先了解我們專案的核心精神：

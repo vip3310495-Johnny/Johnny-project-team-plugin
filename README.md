@@ -1,4 +1,21 @@
-# 🚀 Johnny-Project-Team Plugin
+# 🚀 Johnny Project Team Plugin
+
+本 Repository 同時保存兩個彼此隔離的版本。請依使用的 Host 選擇，
+不要混用兩邊的 manifest、Hook 或 Agent 設定。
+
+| 版本 | 位置 | 適用 Host | 安裝與說明 |
+|---|---|---|---|
+| **Antigravity Edition** | Repository 根目錄 | Google Antigravity | 本頁下方 |
+| **Codex Edition** | [`codex/`](codex/) | OpenAI Codex | [Codex README](codex/README.md) |
+
+> Codex Edition 使用 `.codex-plugin/plugin.json`、Codex lifecycle hooks 與
+> `.codex/agents/*.toml`；Antigravity Edition 使用根目錄既有的
+> `plugin.json`、`agents/*.json` 與 Antigravity hooks。兩者不互相覆寫。
+
+---
+
+# Antigravity Edition
+
 **專為「非技術背景領導者」打造的企業級 AI 專案開發大腦**
 
 [![Antigravity](https://img.shields.io/badge/Powered_by-Antigravity-blue.svg)](https://github.com/google/antigravity) 

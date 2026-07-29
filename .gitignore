@@ -1,2 +1,8 @@
 
 .agents/
+!codex/.agents/
+!codex/.agents/plugins/
+!codex/.agents/plugins/marketplace.json
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]

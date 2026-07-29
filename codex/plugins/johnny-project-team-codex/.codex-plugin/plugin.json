@@ -1,7 +1,7 @@
 {
   "name": "johnny-project-team-codex",
-  "version": "2.1.7-codex.1+codex.20260729090856",
-  "description": "Codex-compatible Johnny Project Team workflow with controlled PM merges, package-aware ECC rules, structured phase prerequisites, per-ticket TDD/SDD DQA, and optional Claude DQA.",
+  "version": "2.1.8-codex.1+codex.20260729024313",
+  "description": "Codex-compatible Johnny Project Team workflow with a canonical src-only delivery layout, PM project initialization, controlled merges, complete ECC rules, TDD/SDD DQA, and optional Claude DQA.",
   "author": {
     "name": "Johnny Project Team contributors"
   },
@@ -30,6 +30,8 @@
       "Optional Log and Observability Agent",
       "DQA-managed TE delegation",
       "Three-level scope contracts",
+      "Canonical src-only product delivery",
+      "New-project Git initialization",
       "Complete path-routed ECC coding rules",
       "One-to-one ticket milestones",
       "Per-ticket TDD then SDD DQA"

@@ -12,6 +12,16 @@ codex plugin list
 
 ## 啟用專案
 
+若是全新專案，先由 PM 建立標準骨架與 Git repository：
+
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_new_project.py `
+  --project <new-project-path> --name "<product-name>"
+```
+
+檢查內容後，建立只包含 `.gitignore` 與 `src/` 的乾淨 baseline commit。
+開發流程資料夾已由 `.gitignore` 排除。
+
 專案必須已有乾淨的初始 Git commit：
 
 ```powershell
@@ -36,8 +46,10 @@ python <plugin-root>\skills\johnny-project-team\scripts\johnny_project_hooks.py 
   migrate --project <project-path>
 ```
 
-Migration 會更新 managed config、固定第 5 次 DQA escalation、context manifest
-與 ECC selection v2，同時保留無衝突的專案自訂設定。
+Migration 會更新 managed config、固定第 5 次 DQA escalation、將產品根目錄
+收斂為 `src/`、更新 context manifest 與 ECC selection v2，同時保留無衝突
+的專案自訂設定。升級前應先將既有產品程式、永久測試、依賴、migration 與
+runtime config 移入 `src/`。
 
 ## 停用
 

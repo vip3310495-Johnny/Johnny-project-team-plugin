@@ -16,13 +16,18 @@
 ## Phase 3 Milestone
 
 1. PM 啟動一個 dependency-ready Ticket/Milestone。
-2. Engineer 執行 `johnny_rules_refresh.py --paths ...`，讀取 selection 中所有
+2. Engineer 僅在 `src/` 實作；永久測試放在 `src/tests/`。依賴、migration、
+   runtime config 與產品腳本也放在 `src/` 對應目錄。
+3. Engineer 執行 `johnny_rules_refresh.py --paths ...`，讀取 selection 中所有
    ECC rules。
-3. Engineer 完成可驗證 vertical slice。
-4. TDD DQA 使用相同 selection hash 審查。
-5. TDD PASS 後，SDD DQA 使用相同 selection hash 審查。
-6. DQA PASS 後執行 `johnny_milestone_gate.py`。
-7. PM 執行：
+4. Engineer 完成可驗證 vertical slice。
+5. TDD DQA 使用相同 selection hash 審查；需要時只能寫
+   `TDD_DQA/tool/` 與 `TDD_DQA/` evidence。
+6. TDD PASS 後，SDD DQA 使用相同 selection hash 審查；需要時只能寫
+   `SDD_DQA/tool/` 與 `SDD_DQA/` evidence。
+7. TE 唯讀執行 DQA 工具，不建立或修改測試程式。
+8. DQA PASS 後，只 stage `src/**`，再執行 `johnny_milestone_gate.py`。
+9. PM 執行：
 
 ```powershell
 python scripts/johnny_pm_merge.py --project <repo> `

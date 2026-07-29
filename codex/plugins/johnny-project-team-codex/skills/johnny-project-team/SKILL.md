@@ -11,7 +11,10 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
 
 ## Runtime contract
 
-1. Create a clean initial Git commit, then enable a repository only with:
+1. PM 確認為全新專案時，以下列命令建立標準產品／流程目錄並初始化 Git：
+   `python scripts/johnny_new_project.py --project <new-repo> --name "<name>"`.
+   檢查結果後，建立只包含 `.gitignore` 與 `src/` 的乾淨 baseline commit，
+   再以下列命令啟用 repository：
    `python scripts/johnny_project_hooks.py enable --project <repo>`.
 2. Never write global Git configuration. The setup uses repository-local
    `core.hooksPath=.johnny/git-hooks`, so unrelated projects are unaffected.
@@ -53,11 +56,23 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
     `references/rules/*/` directories must be represented. After adding or
     changing rules, run `johnny_rules_refresh.py` and inspect the recorded
     `ecc_rules` routes before continuing.
+15. `src/` 是唯一產品交付根目錄。Engineer 在 `src/` 下負責產品程式、永久
+    測試 (`src/tests/`)、依賴／建置 manifest、runtime config、migration
+    與產品腳本。Phase 3 commit 只能包含 `src/**`。
+16. TDD DQA 只能在 `TDD_DQA/tool/` 撰寫獨立工具；SDD DQA 只能使用
+    `SDD_DQA/tool/`；手動 Claude DQA 只能使用 `Claude DQA/tool/`。其報告
+    與 evidence 留在相對應流程目錄，不屬於產品 commit。TE 維持唯讀且只能
+    執行 DQA 提供的工具。可重用的回歸檢查必須交給 Engineer 納入
+    `src/tests/`。
 
 ## Workflow
 
 - Phase 0: clarify intent, non-goals, observable outcomes, and risks. Use the
   `5w1h-grill-me` skill when the request is underspecified.
+  Model Matrix 初始值為 PM／Architect `sol (Medium)`、Engineer
+  `terra (Medium)`、TDD／SDD DQA 與 DQA coordinator `terra (High)`、
+  Security DQA `sol (Medium)`、TE `Luna (High)`；必須驗證模型可用性並
+  取得使用者核准，不得把推薦值視為已可用。
 - Phase 1: establish the architectural frame and external boundaries.
 - Phase 2: let PM alone classify the contract and prepare the Phase 3
   construction package as dependency-ordered tracer bullets. Define exactly
@@ -73,6 +88,9 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
 - Phase 3: execute one approved, dependency-ready ticket/milestone at a time.
   Work only on `codex/milestone-Mxx`; do not commit or push directly to
   `feature/*` or `main`.
+  Engineer 將所有產品交付檔案寫入 `src/`，永久自動測試放在 `src/tests/`。
+  只 stage 與 commit `src/**`；不得包含 PM、DQA、Log、`.johnny` 或
+  `.agents` 流程產物。
   Before implementation, route the active ticket's product paths through
   `johnny_rules_refresh.py --paths ...`; Engineer and both DQA roles must load the same selected
   common, language, and framework rule files. Re-run selection whenever the

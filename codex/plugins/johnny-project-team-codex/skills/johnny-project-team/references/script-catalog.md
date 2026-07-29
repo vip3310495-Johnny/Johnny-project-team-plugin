@@ -15,8 +15,9 @@ because an older filename or document called it one.
 
 | Script | Application |
 |---|---|
+| `scripts/johnny_new_project.py` | PM 僅在確認為全新專案後執行。腳本拒絕非空目標，建立標準 `src/` 產品樹與被忽略的 PM／DQA／流程工作區，在 `main` 初始化 Git，並刻意不建立 baseline commit，留待人工檢查。 |
 | `scripts/johnny_project_hooks.py` | Run `enable`, `status`, `migrate`, or `disable`. `migrate` upgrades managed config and context routes without replacing unrelated project choices. |
-| `scripts/johnny_guard.py` | Called only by generated `pre-commit` and `pre-push`. Validate branch, staged paths, DQA schema, product `subject_tree`, complete `commit_tree`, and required verdicts. Never invoke it as a reviewer. |
+| `scripts/johnny_guard.py` | 僅由產生的 `pre-commit` 與 `pre-push` 呼叫。驗證 branch、staged paths、DQA schema、產品 `subject_tree`、完整 `commit_tree` 與必要 verdict。Phase 3 會拒絕 `src/` 外的所有 staged path；不得把它當 reviewer 手動呼叫。 |
 
 ## State-changing commands
 

@@ -7,9 +7,14 @@ time. Do not add a 3A/3B phase gate and do not start multiple tickets in paralle
 
 1. PM selects one user-approved ticket/milestone pair whose blockers are complete.
 2. Engineer implements only that pair's vertical slice and runs its acceptance checks.
+   所有產品交付檔案都放在 `src/`：應用程式、`src/tests/` 永久自動測試、
+   依賴／建置 manifest、runtime config、migration 與產品腳本。只 stage
+   與 commit `src/**`。
 3. TDD DQA verifies behavior, regressions, edge cases, compatibility, and
    reproducible test evidence for the same ticket and staged tree. A failure
    returns the same ticket to Engineer for correction, then review it again.
+   TDD DQA 只能在 `TDD_DQA/tool/` 建立獨立工具；工具與 evidence 是本機
+   流程產物，不得進入產品 commit。
    A FAIL does not stop AUTONOMOUS execution. Record the verdict with
    `scripts/johnny_dqa_record.py`.
 4. After TDD DQA passes, SDD DQA checks the implementation against the ticket,
@@ -17,6 +22,9 @@ time. Do not add a 3A/3B phase gate and do not start multiple tickets in paralle
    returns the same ticket to Engineer and invalidates prior DQA evidence after
    the implementation changes. Record the verdict with the same script using
    `--role sdd`; the command refuses to run before a TDD PASS.
+   SDD DQA 只能在 `SDD_DQA/tool/` 建立獨立工具；TE 為唯讀，只能執行
+   DQA 工具，不得建立或修改工具。適合永久回歸覆蓋的測試交給 Engineer
+   納入 `src/tests/`。
 5. If the user explicitly requests an external cross-check, run Claude DQA for
    the same ticket and staged tree. Claude DQA is otherwise skipped and cannot
    block the default flow.
@@ -61,6 +69,8 @@ turn the fifth FAIL into PASS or bypass TDD→SDD ordering.
 
 - DQA does not co-design or modify the construction. TDD DQA and SDD DQA act as
   mandatory post-build, pre-user-review gates for every ticket.
+- DQA 只能寫入其隔離的 tool、report 與 evidence workspace；不得修改
+  `src/`，也不得在產品 commit 中 stage 流程產物。
 - Follow FIXED outcomes and tolerances exactly. TDD verifies the observable
   behavior and tolerance; SDD verifies intent, boundaries, and specification fit.
 - On a FIXED problem, notify PM immediately and freeze only the affected feature

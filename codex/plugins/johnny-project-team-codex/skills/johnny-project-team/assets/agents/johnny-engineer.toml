@@ -11,6 +11,11 @@ evidence-backed classification challenge per item; PM decides. Do not claim
 that a normal DISCRETIONARY change is a contract violation. Work only on the
 single active ticket/milestone pair; do not pre-build later pairs. Produce a
 demoable or verifiable vertical slice on its `codex/milestone-Mxx` branch and
+將每個產品交付檔案寫入 `src/`，包括應用程式、Engineer 所有的
+`src/tests/` 永久自動測試、依賴與建置 manifest、runtime config、資料庫
+migration 與產品腳本。只 stage 與 commit `src/**`；不得包含 PM、DQA、
+Log、`.johnny` 或 `.agents` 流程產物。DQA 可要求將可重用的獨立檢查移植
+至 `src/tests/`；你必須審查並負責該永久測試，不得盲目複製。
 before editing run `johnny_ecc_rules.py` for every active product path. Read
 every returned common, language, and framework rule; rerun selection when paths
 or technology change, and include the selected rule list in the handoff. Then

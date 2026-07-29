@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import subprocess
 import sys
 import tomllib
@@ -23,6 +25,7 @@ def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env={**os.environ, "PYTHONUTF8": "1"},
     )
 
 
@@ -44,6 +47,7 @@ def run_script(name: str, *args: str, check: bool = True):
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env={**os.environ, "PYTHONUTF8": "1"},
     )
 
 
@@ -114,6 +118,14 @@ def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
     }
     assert config["dqa_required_from_phase"] == 3
     assert config["dqa_required_phases"] == [3, 4]
+    assert config["schema_version"] == 3
+    assert config["product_root"] == "src/"
+    assert config["allowed_code_roots"] == ["src/"]
+    assert config["product_paths"] == ["src/"]
+    assert config["phase3_commit_roots"] == ["src/"]
+    assert config["dqa_workspaces"]["tdd"]["tool"] == "TDD_DQA/tool/"
+    assert config["dqa_workspaces"]["sdd"]["tool"] == "SDD_DQA/tool/"
+    assert config["dqa_workspaces"]["claude"]["tool"] == "Claude DQA/tool/"
     assert config["te_orchestration"]["max_concurrent_per_dqa"] == 2
     assert config["scope_contract"] == {
         "levels": ["FIXED", "CONTROLLED", "DISCRETIONARY"],
@@ -175,6 +187,17 @@ def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
         "vue",
         "web",
     ]
+    assert manifest["product_layout"] == {
+        "delivery_root": "src/",
+        "permanent_tests": "src/tests/",
+        "phase3_commit_roots": ["src/"],
+        "dqa_tool_roots": {
+            "tdd": "TDD_DQA/tool/",
+            "sdd": "SDD_DQA/tool/",
+            "claude": "Claude DQA/tool/",
+        },
+        "te_write_access": False,
+    }
     run_script("johnny_project_hooks.py", "disable", "--project", str(repo))
     result = git(repo, "config", "--local", "--get", "core.hooksPath", check=False)
     assert result.returncode != 0
@@ -396,6 +419,7 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     log_agent = tomllib.loads(
         (agents / "johnny-log-agent.toml").read_text(encoding="utf-8")
     )
+    te = tomllib.loads((agents / "johnny-te.toml").read_text(encoding="utf-8"))
     architect = tomllib.loads(
         (agents / "johnny-architect.toml").read_text(encoding="utf-8")
     )
@@ -410,8 +434,12 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     assert "johnny_ecc_rules.py" in sdd["developer_instructions"]
     assert "do\nnot unlock SDD" in tdd["developer_instructions"]
     assert "johnny_ecc_rules.py" in tdd["developer_instructions"]
-    assert sdd["sandbox_mode"] == "read-only"
-    assert tdd["sandbox_mode"] == "read-only"
+    assert sdd["sandbox_mode"] == "workspace-write"
+    assert tdd["sandbox_mode"] == "workspace-write"
+    assert "SDD_DQA/tool/" in sdd["developer_instructions"]
+    assert "TDD_DQA/tool/" in tdd["developer_instructions"]
+    assert "絕不修改 `src/`" in sdd["developer_instructions"]
+    assert "絕不修改 `src/`" in tdd["developer_instructions"]
     assert security["sandbox_mode"] == "read-only"
     assert "explicitly requests" in security["developer_instructions"]
     assert "Do not\njoin the default TDD-to-SDD gate" in security["developer_instructions"]
@@ -420,6 +448,9 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     assert "`Logs/`" in log_agent["developer_instructions"]
     assert "Process/Documentation Defects" in architect["developer_instructions"]
     assert architect["sandbox_mode"] == "read-only"
+    assert te["sandbox_mode"] == "read-only"
+    assert "只能執行 parent DQA" in te["developer_instructions"]
+    assert "TE 不得建立" in dqa["developer_instructions"]
 
     matrix = (
         SCRIPTS.parent / "references" / "templates" / "Model_Recommendation_Matrix.md"
@@ -428,6 +459,33 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     assert "assets/agents/johnny-log-agent.toml" in matrix
     assert "agents/security_dqa.json" not in matrix
     assert "agents/log_agent.json" not in matrix
+
+
+def test_model_recommendation_matrix_has_requested_defaults() -> None:
+    matrix = (
+        SCRIPTS.parent / "references" / "templates" / "Model_Recommendation_Matrix.md"
+    ).read_text(encoding="utf-8")
+
+    expected = {
+        "PM": ("sol", "Medium"),
+        "Architect": ("sol", "Medium"),
+        "Engineer": ("terra", "Medium"),
+        "TDD DQA": ("terra", "High"),
+        "SDD DQA": ("terra", "High"),
+        "DQA coordinator": ("terra", "High"),
+        "TE": ("Luna", "High"),
+    }
+    rows = {
+        parts[1].strip(): (parts[4].strip(), parts[5].strip())
+        for line in matrix.splitlines()
+        if line.startswith("|") and len(parts := line.split("|")) >= 9
+    }
+    for role, recommendation in expected.items():
+        assert rows[role] == recommendation
+    assert (
+        "| Security DQA | `assets/agents/johnny-security-dqa.toml` "
+        "| Optional manual security and trust-boundary review | sol | Medium |"
+    ) in matrix
 
 
 def test_phase3_is_single_ticket_policy_review_loop() -> None:
@@ -571,6 +629,26 @@ def test_phase3_dqa_is_ordered_and_tree_bound(repo: Path) -> None:
     stale = git(repo, "commit", "-m", "tree changed", check=False)
     assert stale.returncode != 0
     assert "DQA evidence is missing or stale" in (stale.stdout + stale.stderr)
+
+
+def test_phase3_commit_rejects_everything_outside_src(repo: Path) -> None:
+    run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
+    git(repo, "switch", "-c", "codex/milestone-M09")
+    state_path = repo / ".johnny/state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["phase"] = 3
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    tool = repo / "TDD_DQA/tool/probe.py"
+    tool.parent.mkdir(parents=True)
+    tool.write_text("print('probe')\n", encoding="utf-8")
+    git(repo, "add", "-f", "TDD_DQA/tool/probe.py")
+
+    blocked = git(repo, "commit", "-m", "must not commit DQA tool", check=False)
+
+    assert blocked.returncode != 0
+    assert "Phase 3 commit 只能包含 src/" in (
+        blocked.stdout + blocked.stderr
+    )
 
 
 def test_sdd_fail_opens_new_cycle_and_requires_tdd_again(repo: Path) -> None:
@@ -739,22 +817,72 @@ def test_migrate_upgrades_managed_contracts_and_preserves_custom_config(repo: Pa
     manifest["custom_route"] = "keep"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     custom_agent = repo / ".codex/agents/johnny-pm.toml"
-    custom_agent.write_text("name = \"custom_pm\"\n", encoding="utf-8")
+    custom_profile = (
+        'name = "johnny_pm"\n'
+        'developer_instructions = "project-owned customization"\n'
+    )
+    custom_agent.write_text(custom_profile, encoding="utf-8")
+    managed_agent = repo / ".codex/agents/johnny-engineer.toml"
+    old_managed = 'name = "johnny_engineer"\ndeveloper_instructions = "old contract"\n'
+    managed_agent.write_text(old_managed, encoding="utf-8")
+    managed_path = repo / ".codex/agents/.johnny-managed.json"
+    managed = json.loads(managed_path.read_text(encoding="utf-8"))
+    managed["johnny-engineer.toml"] = hashlib.sha256(
+        managed_agent.read_bytes()
+    ).hexdigest()
+    managed_path.write_text(json.dumps(managed), encoding="utf-8")
     stale_hook = repo / ".johnny/git-hooks/pre-commit"
     stale_hook.write_text("#!/bin/sh\nexec /removed/cache/johnny_guard.py\n", encoding="utf-8")
 
     run_script("johnny_project_hooks.py", "migrate", "--project", str(repo))
 
     migrated = json.loads(config_path.read_text(encoding="utf-8"))
-    assert migrated["schema_version"] == 2
+    assert migrated["schema_version"] == 3
     assert migrated["custom_project_choice"] == {"keep": True}
     assert migrated["dqa_escalation"]["max_rejections_per_role_per_milestone"] == 5
-    assert "apps/" in migrated["allowed_code_roots"]
-    assert "apps/" in migrated["product_paths"]
+    assert migrated["allowed_code_roots"] == ["src/"]
+    assert migrated["product_paths"] == ["src/"]
+    assert migrated["phase3_commit_roots"] == ["src/"]
     refreshed_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert refreshed_manifest["custom_route"] == "keep"
     assert "react-native" in refreshed_manifest["ecc_rules"]["supported_rule_sets"]
-    assert custom_agent.read_text(encoding="utf-8") == 'name = "custom_pm"\n'
+    assert custom_agent.read_text(encoding="utf-8") == custom_profile
+    assert "只 stage 與 commit `src/**`" in managed_agent.read_text(encoding="utf-8")
     expected_guard = str((SCRIPTS / "johnny_guard.py").resolve()).replace("\\", "/")
     assert expected_guard in stale_hook.read_text(encoding="utf-8")
     assert (repo / ".johnny/migration-history.jsonl").is_file()
+
+
+def test_migrate_refuses_tracked_product_files_outside_src(repo: Path) -> None:
+    misplaced = {
+        "app/legacy.py": "VALUE = 1\n",
+        "config/prod.yaml": "mode: production\n",
+        "migrations/001.sql": "CREATE TABLE example(id INT);\n",
+        "scripts/build.ps1": "Write-Output build\n",
+        "include/example.hpp": "#pragma once\n",
+        "Makefile": "all:\n\t@echo build\n",
+    }
+    for relative, content in misplaced.items():
+        path = repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    git(repo, "add", *misplaced)
+    git(repo, "commit", "-m", "legacy layout")
+    run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
+    config_path = repo / ".johnny/config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["schema_version"] = 2
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    agent = repo / ".codex/agents/johnny-engineer.toml"
+    before_agent = agent.read_bytes()
+
+    result = run_script(
+        "johnny_project_hooks.py", "migrate", "--project", str(repo), check=False
+    )
+
+    assert result.returncode != 0
+    assert "tracked 產品交付檔案移入 src/" in result.stderr
+    for relative in misplaced:
+        assert relative in result.stderr
+    assert json.loads(config_path.read_text(encoding="utf-8"))["schema_version"] == 2
+    assert agent.read_bytes() == before_agent

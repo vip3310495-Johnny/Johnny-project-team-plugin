@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
@@ -18,7 +19,43 @@ from johnny_common import (
     run_git,
 )
 
-CONFIG_SCHEMA_VERSION = 2
+CONFIG_SCHEMA_VERSION = 3
+PROCESS_ROOTS = (
+    ".johnny/",
+    ".agents/",
+    ".codex/",
+    "PM/",
+    "Architect/",
+    "TDD_DQA/",
+    "SDD_DQA/",
+    "Claude DQA/",
+    "Logs/",
+)
+ROOT_NON_PRODUCT_FILES = {
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "JOHNNY_PROJECT_RULES.md",
+    "LICENSE",
+    "LICENSE.md",
+    "README.md",
+    "SECURITY.md",
+}
+NON_PRODUCT_ROOTS = (
+    ".github/",
+    "docs/",
+)
+LEGACY_MANAGED_AGENT_BLOBS = {
+    "johnny-pm.toml": {"a3d3b70d1aee79dc53d2bd4ad01e956ce04d487f"},
+    "johnny-engineer.toml": {"30e2dff5b4d20195a4c749a1914d438170c316d9"},
+    "johnny-tdd-dqa.toml": {"13fd290f1c5f9ced1bb0aa9f0d638f39d27afbfc"},
+    "johnny-sdd-dqa.toml": {"483ebd23d45beb1495dcd31b2d52f5d8936dda25"},
+    "johnny-dqa.toml": {"109a69e6a8b7c9c35381f68987b5a8c9c53d0172"},
+    "johnny-te.toml": {"10751c0ad22843edbf895668d4e06cbda77a6560"},
+}
 
 
 def hook_text(guard: Path, event: str, prior_hook: Path | None) -> str:
@@ -68,21 +105,48 @@ def canonical(path: Path) -> Path:
     return path.resolve()
 
 
+def sha256_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def git_blob_oid(content: bytes) -> str:
+    header = f"blob {len(content)}\0".encode("ascii")
+    return hashlib.sha1(header + content).hexdigest()
+
+
 def install_agent_templates(project: Path, *, preserve_existing: bool = False) -> None:
     source_dir = Path(__file__).resolve().parents[1] / "assets" / "agents"
     target_dir = project / ".codex" / "agents"
     target_dir.mkdir(parents=True, exist_ok=True)
+    managed_path = target_dir / ".johnny-managed.json"
+    managed = read_json(managed_path, {}) or {}
+    if not isinstance(managed, dict):
+        managed = {}
     for source in source_dir.glob("*.toml"):
         target = target_dir / source.name
-        content = source.read_text(encoding="utf-8")
-        if (
-            target.exists()
-            and target.read_text(encoding="utf-8") != content
-            and not preserve_existing
-        ):
-            raise RuntimeError(f"refusing to overwrite existing custom agent: {target}")
-        if not target.exists():
-            target.write_text(content, encoding="utf-8", newline="\n")
+        content = source.read_bytes()
+        source_hash = sha256_bytes(content)
+        if target.exists():
+            current = target.read_bytes()
+            if current == content:
+                managed[source.name] = source_hash
+                continue
+            if not preserve_existing:
+                raise RuntimeError(f"refusing to overwrite existing custom agent: {target}")
+            current_hash = sha256_bytes(current)
+            known_managed = current_hash == managed.get(source.name)
+            known_legacy = git_blob_oid(current) in LEGACY_MANAGED_AGENT_BLOBS.get(
+                source.name, set()
+            )
+            if known_managed or known_legacy:
+                target.write_bytes(content)
+                managed[source.name] = source_hash
+            else:
+                managed.pop(source.name, None)
+        else:
+            target.write_bytes(content)
+            managed[source.name] = source_hash
+    atomic_json(managed_path, managed)
 
 
 def install_project_rules(project: Path) -> None:
@@ -97,7 +161,7 @@ def install_project_rules(project: Path) -> None:
         )
     else:
         content = rules_target.read_text(encoding="utf-8")
-        marker = "<!-- johnny-ecc-selection-v2 -->"
+        marker = "<!-- johnny-project-contract-v3 -->"
         if marker not in content:
             addition = (
                 "\n\n"
@@ -110,6 +174,10 @@ def install_project_rules(project: Path) -> None:
                 "Phase 3 evidence must contain an approved AVAILABLE Model Matrix. "
                 "After `johnny_milestone_gate.py`, merge only with "
                 "`johnny_pm_merge.py`.\n"
+                "所有產品交付檔案都放在 `src/`；Phase 3 commit 只能包含 "
+                "`src/**`。Engineer 負責 `src/tests/` 永久測試。DQA 工具留在 "
+                "對應的 `TDD_DQA/tool/`、`SDD_DQA/tool/` 或 "
+                "`Claude DQA/tool/` 流程工作區且不得 stage。TE 維持唯讀。\n"
             )
             rules_target.write_text(content.rstrip() + addition, encoding="utf-8", newline="\n")
     manifest_source = templates / "context-manifest.json"
@@ -133,25 +201,46 @@ def install_project_rules(project: Path) -> None:
         current["rules_version"] = template.get("rules_version")
         current["ecc_rules"] = template.get("ecc_rules", {})
         current["ecc_selection"] = ".johnny/ecc-selection.json"
+        current["product_layout"] = template.get("product_layout", {})
         atomic_json(manifest_target, current)
 
 
 def migrate_config(config: dict) -> dict:
     """Upgrade managed contracts while preserving unrelated project choices."""
     config["schema_version"] = CONFIG_SCHEMA_VERSION
-    for key, defaults in {
-        "allowed_code_roots": [
-            "src/", "app/", "apps/", "lib/", "packages/", "services/", "ui/",
-            "tests/", "TDD_DQA/", "SDD_DQA/",
-        ],
-        "product_paths": [
-            "src/", "app/", "apps/", "lib/", "packages/", "services/", "ui/",
-            "config/", "tests/", "package.json", "pyproject.toml",
-        ],
-    }.items():
-        values = list(config.get(key, []))
-        values.extend(value for value in defaults if value not in values)
-        config[key] = values
+    config["product_root"] = "src/"
+    config["allowed_code_roots"] = ["src/"]
+    config["product_paths"] = ["src/"]
+    config["phase3_commit_roots"] = ["src/"]
+    config["process_artifact_roots"] = [
+        ".johnny/",
+        ".agents/",
+        ".codex/",
+        "JOHNNY_PROJECT_RULES.md",
+        "PM/",
+        "Architect/",
+        "TDD_DQA/",
+        "SDD_DQA/",
+        "Claude DQA/",
+        "Logs/",
+    ]
+    config["dqa_workspaces"] = {
+        "tdd": {
+            "tool": "TDD_DQA/tool/",
+            "report": "TDD_DQA/",
+            "evidence": "TDD_DQA/evidence/",
+        },
+        "sdd": {
+            "tool": "SDD_DQA/tool/",
+            "report": "SDD_DQA/",
+            "evidence": "SDD_DQA/evidence/",
+        },
+        "claude": {
+            "tool": "Claude DQA/tool/",
+            "report": "Claude DQA/",
+            "evidence": "Claude DQA/evidence/",
+        },
+    }
     config.setdefault("dqa_escalation", {})
     config["dqa_escalation"]["max_rejections_per_role_per_milestone"] = 5
     config["dqa_escalation"]["count_scope"] = "milestone-and-dqa-role"
@@ -176,6 +265,31 @@ def migrate_config(config: dict) -> dict:
         }
     )
     return config
+
+
+def validate_migration_layout(project: Path) -> None:
+    """若仍有 tracked 產品檔案位於 src 外，拒絕嚴格的 v3 migration。"""
+    tracked = run_git(project, "ls-files").splitlines()
+    misplaced = []
+    for raw in tracked:
+        value = raw.strip().replace("\\", "/")
+        if (
+            not value
+            or value.startswith("src/")
+            or value.startswith(PROCESS_ROOTS)
+            or value.startswith(NON_PRODUCT_ROOTS)
+            or value in ROOT_NON_PRODUCT_FILES
+        ):
+            continue
+        misplaced.append(value)
+    if misplaced:
+        preview = ", ".join(misplaced[:8])
+        if len(misplaced) > 8:
+            preview += f", ... (+{len(misplaced) - 8})"
+        raise RuntimeError(
+            "schema v3 migration 前，請將不屬於明確流程／根目錄 metadata 的 "
+            f"tracked 產品交付檔案移入 src/：{preview}"
+        )
 
 
 def enable(project_arg: Path) -> None:
@@ -210,20 +324,6 @@ def enable(project_arg: Path) -> None:
     config["claude_dqa"].setdefault("enabled", False)
     config["claude_dqa"].setdefault("required", False)
     config["claude_dqa"].setdefault("manual_allowed", True)
-    config.setdefault("allowed_code_roots", ["src/", "tests/", "TDD_DQA/", "SDD_DQA/"])
-    config.setdefault(
-        "product_paths",
-        [
-            "src/",
-            "tests/",
-            "app/",
-            "lib/",
-            "ui/",
-            "config/",
-            "package.json",
-            "pyproject.toml",
-        ],
-    )
     config.setdefault(
         "evidence_paths",
         ["TDD_DQA/", "SDD_DQA/", "Claude DQA/", "PM/", "Architect/"],
@@ -283,11 +383,13 @@ def migrate(project_arg: Path) -> None:
     project = git_root(project_arg)
     if not is_enabled(project):
         raise RuntimeError("enable the project before running migration")
-    install_agent_templates(project, preserve_existing=True)
-    install_project_rules(project)
     config_path = project / STATE_DIR / "config.json"
     config = read_json(config_path, {}) or {}
     before = int(config.get("schema_version", 1))
+    if before < 3:
+        validate_migration_layout(project)
+    install_agent_templates(project, preserve_existing=True)
+    install_project_rules(project)
     atomic_json(config_path, migrate_config(config))
     marker_path = project / STATE_DIR / "enabled.json"
     marker = read_json(marker_path, {}) or {}

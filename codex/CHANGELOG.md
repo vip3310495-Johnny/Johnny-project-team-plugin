@@ -3,6 +3,33 @@
 此檔只記錄 `codex/` 版本；Antigravity Edition 使用儲存庫根目錄的
 `CHANGELOG.md`。
 
+## 2.1.8-codex.1 — 2026-07-29
+
+### Added
+
+- `johnny_new_project.py`：由 PM 為全新專案建立標準 `src/` 產品骨架、
+  隔離的 PM/DQA 流程工作區，並初始化 `main` Git repository。
+- README 新增完整檔案架構、目錄所有權與產品提交規則。
+
+### Changed
+
+- `src/` 成為唯一產品交付根目錄；永久測試、依賴／建置 manifest、
+  runtime config、migration 與產品腳本皆集中在其下。
+- Phase 3 Git gate 只接受 `src/**`；DQA tool、報告與 evidence 不得混入
+  產品 commit。
+- TDD／SDD DQA 可在各自 `tool/` 建立獨立測試工具，但不得修改 `src/`；
+  TE 維持唯讀。
+- Model Recommendation Matrix 初始值更新為 PM／Architect `sol (Medium)`、
+  Engineer `terra (Medium)`、TDD／SDD／DQA coordinator `terra (High)`、
+  Security DQA `sol (Medium)`、TE `Luna (High)`。
+- Config schema 升級至 v3；migration 會拒絕仍有 tracked 產品檔案散落在
+  `src/` 外的舊專案。
+
+### Validation
+
+- 新增新專案骨架、Git 初始化、非空目錄防呆、`src/**` gate、DQA workspace、
+  模型矩陣與 schema v3 migration 測試。
+
 ## 2.1.7-codex.1 — 2026-07-29
 
 ### Added

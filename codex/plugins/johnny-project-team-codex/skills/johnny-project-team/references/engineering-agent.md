@@ -20,7 +20,7 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 
 ## 2.5 實體架構隔離與語法紀律 (Architecture & Syntax Discipline) [NEW]
 * **ECC 規則顯式載入**：修改任何產品程式碼前，使用 `johnny_ecc_rules.py --project <repo> --paths <active-product-paths>`，逐一讀取回傳的 common、語言與框架規則。不得假設 `.agents/AGENTS.md` 已自動注入完整規則；路徑或技術棧改變時必須重新選擇。
-* **主程式隔離鐵律**：所有的主程式業務邏輯只能且必須放在 `src/` 目錄之下，嚴禁散落在專案根目錄。測試程式與輔助腳本應放在對應的測試與腳本目錄。
+* **產品交付隔離鐵律**：所有主程式、Engineer 維護的永久自動測試、依賴／建置 manifest、runtime config、資料庫 migration 與產品腳本都只能放在 `src/` 下。永久測試統一放在 `src/tests/`；Phase 3 產品 commit 只能提交 `src/**`，不得混入 PM、DQA、Log、`.johnny` 或 `.agents` 流程資料。
 
 ## 3. 結構化溝通與透明度 (Structured Transparency)
 * **高情報價值的 PR 描述：** 必須使用標準化的變更說明模板與 DQA 交接，內容必須包含：實作邏輯、複雜度分析、環境建置步驟、自測結果，以及**強烈建議 DQA 測試的邊界案例（Test Cases Suggestions）**。

@@ -33,12 +33,19 @@ def validate_scope(project: Path) -> None:
         fail("activation marker scope does not match this repository")
 
 
-def validate_paths(project: Path, paths: list[str], config: dict) -> None:
+def validate_paths(project: Path, paths: list[str], config: dict, state: dict) -> None:
     allowed_roots = tuple(config.get("allowed_code_roots", []))
+    phase = int(state.get("phase", 0))
+    phase3_roots = tuple(config.get("phase3_commit_roots", ["src/"]))
     for value in paths:
         path = PurePosixPath(value)
         if ".." in path.parts or path.is_absolute():
             fail(f"unsafe staged path: {value}")
+        if phase == 3 and phase3_roots and not value.startswith(phase3_roots):
+            fail(
+                "Phase 3 commit 只能包含 src/ 產品交付檔案；"
+                f"請取消 stage 流程產物：{value}"
+            )
         if value.startswith(".johnny/") and value not in {
             ".johnny/config.json",
             ".johnny/state.json",
@@ -131,7 +138,7 @@ def main() -> int:
 
     validate_branch(project, config, state, args.event)
     paths = staged_paths(project)
-    validate_paths(project, paths, config)
+    validate_paths(project, paths, config, state)
     validate_dqa(project, paths, config, state)
     print(f"[Johnny gate] {args.event}: PASS")
     return 0

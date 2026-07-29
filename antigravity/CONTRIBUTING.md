@@ -4,9 +4,9 @@
 
 ## 先選擇版本
 
-- Antigravity Edition 的變更留在 Repository 根目錄。
-- Codex Edition 的變更只能放在 `codex/`，並遵循
-  [`codex/CONTRIBUTING.md`](codex/CONTRIBUTING.md)。
+- Antigravity Edition 的變更只能留在 `antigravity/`。
+- Codex Edition 位於同層的 `../codex/`，並遵循
+  [`../codex/CONTRIBUTING.md`](../codex/CONTRIBUTING.md)。
 - 不要讓單一 PR 同時修改兩個 Edition，除非變更內容只是版本導覽或共同授權文件。
 
 ## 🎯 我們的核心使命

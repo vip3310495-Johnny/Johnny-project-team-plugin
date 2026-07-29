@@ -18,7 +18,7 @@ Codex Edition 的所有變更必須留在 `codex/`。
 
 ## 不得混用
 
-- 不要修改根目錄 Antigravity manifest 來啟用 Codex 功能。
+- 不要修改同層 `../antigravity/` 的 Antigravity manifest 來啟用 Codex 功能。
 - 不要把 Antigravity JSON Agent profiles 複製進 Codex Plugin。
 - 不要讓 Hook 呼叫外部 LLM、產生 approval 或寫入 DQA verdict。
 - 不要把所有語言規則無條件注入 context；先偵測技術棧，再依產品路徑選擇。

@@ -25,6 +25,8 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
    to `johnny_dqa_record.py`; no hook may invoke Claude or write a verdict.
 6. Advance phases only through:
    `python scripts/johnny_phase_gate.py --project <repo> --to-phase N --approval "<user approval>"`.
+   Transitions to Phase 1, 3, and 5 also require a schema-valid `--evidence`
+   JSON file; Phase 3 evidence includes the approved, available Model Matrix.
    When advancing from Phase 2 to Phase 3, also require
    `--execution-policy SUPERVISED|AUTONOMOUS`.
 7. Never overwrite a project's `AGENTS.md`, `.gitignore`, or existing hooks.
@@ -72,7 +74,7 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
   Work only on `codex/milestone-Mxx`; do not commit or push directly to
   `feature/*` or `main`.
   Before implementation, route the active ticket's product paths through
-  `johnny_ecc_rules.py`; Engineer and both DQA roles must load the same selected
+  `johnny_rules_refresh.py --paths ...`; Engineer and both DQA roles must load the same selected
   common, language, and framework rule files. Re-run selection whenever the
   active product paths or technology stack changes.
   After Engineer delivers its demoable or verifiable vertical slice, require
@@ -84,6 +86,9 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
   After required DQA passes, run `johnny_milestone_gate.py`. SUPERVISED requires
   explicit CEO approval; AUTONOMOUS records the Phase 2 CEO delegation. Only
   then unlock the next dependency-ready pair.
+  Merge an approved Milestone only through `johnny_pm_merge.py --ticket Mxx
+  --target feature/<release>` (or `main` for the final approved integration).
+  Add `--push` only when the approved workflow should publish that target to origin.
   Record required subject-tree-bound verdicts in order:
   `python scripts/johnny_dqa_record.py verdict --project <repo> --ticket <milestone-id> --role tdd --result PASS|FAIL --evidence "<path-or-reference>" --reviewer-id "<stable-id>"`
   and then the same command with `--role sdd`.

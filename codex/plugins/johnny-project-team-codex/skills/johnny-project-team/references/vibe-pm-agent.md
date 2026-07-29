@@ -91,13 +91,13 @@ PM、Hook 或工作流呼叫。
 
 ### 十、 Vibe 模式與 Rigorous 模式的動態切換 (Vibe vs Rigorous Mode Switch)
 33. **防止驗證癱瘓 (Analysis Paralysis Prevention)：** PM Agent 擁有多達數十種的嚴格驗證腳本（如 MECE、AHP、雅各布定律）。但如果在每一次的程式碼生成都全部跑一遍，將會徹底扼殺 Vibe Coding 的「心流與高速迭代」。
-34. **動態閘門控制：** 
+34. **動態閘門控制：**
     *   **Vibe Mode (高速衝刺期)：** 在開發者快速寫 Code 與刻 UI 時，PM Agent 只啟用「即時且輕量」的驗證（如：Poka-Yoke 防呆、視覺對比度、漸進式揭示）。絕不阻斷開發者的心流。
     *   **Rigorous Mode (里程碑審查期)：** 只有在 Phase 1 提交前、專案重大架構變更、或引入外部 API 時，PM 才全面開啟「重裝武器」（如：F&Z 視線追蹤、MECE 架構檢驗、5 Whys 深度分析），進行極致的品質把關。
 
 ### 十一、 AI 代理協作的深層陷阱與反制 (Deep Traps & Countermeasures)
 35. **防範「AI 諂媚效應 (Agent Sycophancy)」：** 在多 Agent 協作 (如 PM + Dev + DQA) 中，AI 系統常為了「提早結束任務」而產生集體幻覺，互相無條件同意（例如：Dev 寫出爛 Code，DQA 卻秒回 Pass，PM 說 Great）。
-    *   **反制 (Devil's Advocate)：** 若系統在 Phase 1 第一次跑測試就「零失誤完美過關」，PM 必須提高警覺，主動調用 `devil_advocate_consensus_breaker` 腳本，人為丟入一個「極端邊界破壞條件」，強迫打斷這種虛假的和平共識。
+    *   **反制（反方檢查）：** 若系統在 Phase 1 第一次跑測試就零失誤過關，PM 應要求一項可重現的極端邊界測試與獨立證據，不得把 experimental placeholder 當成有效檢查。
 36. **上下文失憶防護 (Context Window Overflow)：** Vibe Coding 節奏極快，若 PM Agent 無腦將所有腳本生成的 JSON 報表與長篇 `lesson_learn.md` 直接塞入 Prompt 中，將觸發 LLM 的「Lost in the Middle (中間失憶現象)」，使 PM 變笨並忘記初始目標。
     *   **反制 (知識壓縮)：** PM Agent 定期必須將冗長的決策報告「摘要壓縮」成 3 條絕對指令 (Core Directives)，並清除舊的 raw logs，確保大腦記憶體始終保持精銳。
 
@@ -105,7 +105,7 @@ PM、Hook 或工作流呼叫。
 37. **CEO 獨裁與 UX 債務追蹤 (CEO Override & UX Debt)：** 在 Vibe Coding 中，使用者(CEO) 的直覺永遠是第一順位。如果 CEO 強烈堅持要放 15 個按鈕（即使違反了希克定律），PM Agent **絕對不能死板阻擋**。
     *   **反制 (妥協與記帳)：** PM 必須妥協並立刻執行，但在背景調用 `ux_debt_tracker` 腳本，將這筆「UX 債務」記下。當債務分數過高時，PM 才能在適當的時機點（如 Milestone 結束時）主動向 CEO 提出「重構與體驗還債」的量化數據建議。
 38. **打破靜態閾值的教條主義 (Dynamic Context Awareness)：** 不同的專案屬性不應共用同一套死板的腳本標準（例如 B2B 後台系統的欄位本來就比 B2C 落地頁多，若無腦套用 7 個選項的希克定律，將導致瘋狂報錯）。
-    *   **反制 (專案上下文切換)：** PM Agent 在專案啟動時，必須優先調用 `project_context_manager` 腳本，設定當前專案是 B2B、B2C 還是內部工具。後續所有的 UX 驗證腳本，都會根據這個全域設定動態放寬或縮緊審查閾值。
+    *   **反制（專案上下文）：** PM 在 Task Context Pack 明確記錄 B2B、B2C 或內部工具及其 UX 驗收閾值；不得依賴未實作的全域 placeholder 狀態。
 
 ### 十三、 反內捲機制：打破 CEO 的分析癱瘓 (Anti-Analysis Paralysis)
 39. **反制無限規劃迴圈 (CEO Loop Prevention)：** Vibe Coding 的核心在於「動手做與直覺感受 (Vibe)」。如果 CEO (使用者) 陷入了完美主義，反覆無窮地詢問「還有邏輯不通的地方嗎？」或「還有能優化的嗎？」，導致專案卡在 `PLAN` 階段遲遲無法進入 `DO` (開發) 階段，這本身就是最嚴重的邏輯漏洞。

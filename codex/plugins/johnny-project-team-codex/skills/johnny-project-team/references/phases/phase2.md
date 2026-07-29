@@ -58,4 +58,4 @@ CEO. Only an explicit CEO resolution reopens review.
 Advance only after the CEO approves the construction package, granularity, and
 policy:
 
-`python scripts/johnny_phase_gate.py --project <repo> --to-phase 3 --execution-policy SUPERVISED|AUTONOMOUS --approval "<CEO approval and delegation text>"`
+`python scripts/johnny_phase_gate.py --project <repo> --to-phase 3 --execution-policy SUPERVISED|AUTONOMOUS --approval "<CEO approval and delegation text>" --evidence <phase2-evidence.json>`

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import subprocess
 from pathlib import Path, PurePosixPath
@@ -145,6 +146,85 @@ def _package_dependency_sets(project: Path, paths: Sequence[str]) -> list[set[st
     return dependency_sets
 
 
+def _package_manifests(project: Path, paths: Sequence[str]) -> dict[str, set[str]]:
+    """Return package-root dependencies without merging unrelated workspaces."""
+    manifests: dict[str, set[str]] = {}
+    candidates = {
+        path
+        for path in paths
+        if PurePosixPath(path).name.lower() == "package.json"
+    }
+    if (project / "package.json").is_file():
+        candidates.add("package.json")
+    for relative in sorted(candidates):
+        package = project / relative
+        try:
+            data = json.loads(package.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        dependencies: set[str] = set()
+        for key in (
+            "dependencies",
+            "devDependencies",
+            "peerDependencies",
+            "optionalDependencies",
+        ):
+            values = data.get(key, {})
+            if isinstance(values, dict):
+                dependencies.update(str(name).lower() for name in values)
+        root = PurePosixPath(relative).parent.as_posix()
+        manifests["." if root == "." else root] = dependencies
+    return manifests
+
+
+def _owning_package(path: str, package_roots: Sequence[str]) -> str:
+    """Choose the deepest package root containing one active path."""
+    candidate = PurePosixPath(path)
+    matches = [
+        root
+        for root in package_roots
+        if root == "." or candidate == PurePosixPath(root) or PurePosixPath(root) in candidate.parents
+    ]
+    return max(matches, key=lambda value: len(PurePosixPath(value).parts), default=".")
+
+
+def _detect_package_rulesets(paths: Sequence[str], dependencies: set[str]) -> list[str]:
+    selected = {"common"}
+    for ruleset, (suffixes, names) in LANGUAGE_HINTS.items():
+        if _has_hint(paths, suffixes, names):
+            selected.add(ruleset)
+
+    native = bool({"react-native", "expo"} & dependencies)
+    angular = "@angular/core" in dependencies or any(
+        PurePosixPath(path).name.lower() == "angular.json" for path in paths
+    )
+    nuxt = "nuxt" in dependencies or any(
+        PurePosixPath(path).name.lower().startswith("nuxt.config") for path in paths
+    )
+    vue = "vue" in dependencies or any(path.lower().endswith(".vue") for path in paths)
+    react = "react" in dependencies and not native
+    if not dependencies and not native:
+        react = any(path.lower().endswith((".jsx", ".tsx")) for path in paths)
+
+    if native:
+        selected.add("react-native")
+    if angular:
+        selected.add("angular")
+    if nuxt:
+        selected.update(("nuxt", "vue"))
+    elif vue:
+        selected.add("vue")
+    if react:
+        selected.add("react")
+    if angular or nuxt or vue or react or any(
+        path.lower().endswith(WEB_SUFFIXES) for path in paths
+    ):
+        selected.add("web")
+    return [name for name in RULESET_ORDER if name in selected]
+
+
 def _has_hint(paths: Sequence[str], suffixes: Sequence[str], names: Sequence[str]) -> bool:
     lowered_names = {name.lower() for name in names}
     return any(
@@ -241,7 +321,23 @@ def select_rules(
     project = project.resolve()
     all_paths = project_paths(project)
     active_paths = _normalize_paths(paths) if paths is not None else changed_paths(project)
-    rulesets = detect_rulesets(project, all_paths)
+    manifests = _package_manifests(project, all_paths)
+    package_roots = tuple(manifests)
+    grouped_paths: dict[str, list[str]] = {}
+    for active_path in active_paths:
+        root = _owning_package(active_path, package_roots)
+        grouped_paths.setdefault(root, []).append(active_path)
+    if not grouped_paths:
+        grouped_paths["."] = []
+    package_rulesets = {
+        root: _detect_package_rulesets(group_paths, manifests.get(root, set()))
+        for root, group_paths in grouped_paths.items()
+    }
+    rulesets = [
+        name
+        for name in RULESET_ORDER
+        if any(name in values for values in package_rulesets.values())
+    ]
     selected: list[str] = []
     matched_by: dict[str, list[str]] = {}
 
@@ -250,25 +346,52 @@ def select_rules(
         for rule in sorted(directory.glob("*.md")):
             relative = rule.relative_to(rules_root).as_posix()
             globs = rule_globs(rule)
-            matches = (
-                active_paths
-                if ruleset == "common" or not globs
-                else [
-                    path
-                    for path in active_paths
-                    if any(_matches(path, pattern) for pattern in globs)
-                ]
-            )
+            eligible_paths = [
+                path
+                for root, group in grouped_paths.items()
+                if ruleset in package_rulesets[root]
+                for path in group
+            ]
+            matches = eligible_paths if ruleset == "common" or not globs else [
+                path
+                for path in eligible_paths
+                if any(_matches(path, pattern) for pattern in globs)
+            ]
             if ruleset == "common" or matches:
                 selected.append(relative)
                 matched_by[relative] = matches[:20]
 
+    rule_hashes = {
+        relative: hashlib.sha256((rules_root / relative).read_bytes()).hexdigest()
+        for relative in selected
+    }
+    package_selection = [
+        {
+            "package_root": root,
+            "active_paths": grouped_paths[root],
+            "detected_rulesets": package_rulesets[root],
+        }
+        for root in sorted(grouped_paths)
+    ]
+    digest_payload = json.dumps(
+        {
+            "active_paths": active_paths,
+            "packages": package_selection,
+            "rule_hashes": rule_hashes,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "rules_root": str(rules_root.resolve()),
         "active_paths": active_paths,
         "detected_rulesets": rulesets,
+        "packages": package_selection,
         "rule_files": selected,
+        "rule_hashes": rule_hashes,
+        "selection_sha256": hashlib.sha256(digest_payload).hexdigest(),
         "matched_by": matched_by,
     }
 
@@ -280,6 +403,27 @@ def format_context(selection: dict) -> str:
         f"Detected rulesets: {', '.join(selection['detected_rulesets'])}. "
         f"Read every selected file under {selection['rules_root']}: {files}"
     )
+
+
+def load_or_select_rules(
+    project: Path,
+    paths: Sequence[str] | None = None,
+) -> dict:
+    """Reuse an exact persisted selection when it still matches current routing."""
+    project = project.resolve()
+    current = select_rules(project, paths)
+    selection_path = project / ".johnny" / "ecc-selection.json"
+    try:
+        persisted = json.loads(selection_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return current
+    if (
+        isinstance(persisted, dict)
+        and persisted.get("schema_version") == 2
+        and persisted.get("selection_sha256") == current["selection_sha256"]
+    ):
+        return persisted
+    return current
 
 
 def main() -> int:

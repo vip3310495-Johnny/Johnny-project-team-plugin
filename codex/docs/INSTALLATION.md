@@ -1,90 +1,49 @@
-# Codex Edition 安裝與更新
+# Codex Edition 安裝
 
-## 前置需求
+## 安裝 Plugin
 
-- OpenAI Codex Desktop 或可使用 `codex plugin` 指令的 Codex CLI。
-- Git。
-- Python 3.10 以上，用於 repository-local gate scripts。
-- Claude CLI 僅在手動啟用 Claude DQA 時需要。
-
-## 從 GitHub 安裝
-
-```bash
-git clone https://github.com/vip3310495-Johnny/Johnny-project-team-plugin.git
-cd Johnny-project-team-plugin
-codex plugin marketplace add ./codex
-codex plugin add johnny-project-team-codex@johnny-project-team-github
-codex plugin list
-```
-
-Windows PowerShell 也可以使用：
+在儲存庫根目錄執行：
 
 ```powershell
-git clone https://github.com/vip3310495-Johnny/Johnny-project-team-plugin.git
-Set-Location .\Johnny-project-team-plugin
 codex plugin marketplace add .\codex
 codex plugin add johnny-project-team-codex@johnny-project-team-github
 codex plugin list
 ```
 
-成功時，清單應顯示：
+## 啟用專案
 
-```text
-johnny-project-team-codex@johnny-project-team-github  installed, enabled
+專案必須已有乾淨的初始 Git commit：
+
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_project_hooks.py `
+  enable --project <project-path>
 ```
 
-## 更新
+此命令只設定該 repository 的 `core.hooksPath=.johnny/git-hooks`，不修改 global
+Git config，也不覆蓋專案的 `AGENTS.md` 或 `.gitignore`。
 
-```bash
-git pull
-codex plugin add johnny-project-team-codex@johnny-project-team-github
+確認狀態：
+
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_project_hooks.py `
+  status --project <project-path>
 ```
 
-每次安裝或更新後都應開啟新的 Codex task，讓 Skills、Hooks 與 Agent
-profiles 從新版本載入。
+## 升級既有專案
 
-## Hook trust
-
-Codex lifecycle hooks 可以在 `SessionStart`、`SubagentStart` 與
-`PreToolUse` 執行。首次安裝或 Hook 內容更新後，Codex 可能要求信任確認。
-請先檢視 `plugins/johnny-project-team-codex/hooks/hooks.json` 與對應 Python
-dispatcher，再允許執行。
-
-## 啟用目標專案
-
-1. 確認專案已初始化 Git。
-2. 建立乾淨的 initial commit。
-3. 執行 `johnny_project_hooks.py enable`。
-4. 執行 `status` 確認 `.johnny/enabled.json` 與 repository scope。
-
-Plugin 不會覆寫既有的 `AGENTS.md`、`.gitignore` 或自訂 Git hooks。
-
-啟用後可確認 ECC rule selector：
-
-```bash
-python <plugin-root>/skills/johnny-project-team/scripts/johnny_ecc_rules.py \
-  --project <project-path> --format json
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_project_hooks.py `
+  migrate --project <project-path>
 ```
 
-輸出應包含 `detected_rulesets` 與 `rule_files`。所有適用規則均直接由
-Plugin 的 `references/rules/` 讀取，不會寫入或覆蓋目標專案的規則檔案。
+Migration 會更新 managed config、固定第 5 次 DQA escalation、context manifest
+與 ECC selection v2，同時保留無衝突的專案自訂設定。
 
-## 解除專案 Gate
+## 停用
 
-```bash
-python <plugin-root>/skills/johnny-project-team/scripts/johnny_project_hooks.py \
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_project_hooks.py `
   disable --project <project-path>
 ```
 
-Disable 只還原該 Repository 先前的 hooks path，保留 `.johnny` 稽核證據。
-
-## 疑難排解
-
-- 找不到 Skill：確認已開啟新的 Codex task。
-- Hook 沒有執行：檢查 Hook trust 與 `hooks/hooks.json`。
-- Git commit 被阻擋：先執行 `status`，確認 Phase、branch、DQA evidence 與
-  staged tree 是否一致。
-- Phase 3 無法開始：Phase 2→3 必須選擇 `SUPERVISED` 或 `AUTONOMOUS`。
-- 規則未載入：確認已在新 Codex task 中執行，並檢查 selector 的
-  `active_paths`、`detected_rulesets` 與 `rule_files`。
-- 同一 DQA 第五次退件：必須由 CEO resolution 指令解除 Milestone freeze。
+停用會還原先前 repository-local hooks path，並保留 `.johnny` evidence。

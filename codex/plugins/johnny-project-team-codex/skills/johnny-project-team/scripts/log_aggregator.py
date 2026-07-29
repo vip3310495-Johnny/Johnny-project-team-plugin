@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     print("[HOOK] log_aggregator 開始執行...")
-    
+
     if not os.path.exists(args.input):
         print(f"[ERROR] 找不到輸入檔案: {args.input}")
         sys.exit(1)
@@ -28,7 +28,7 @@ def main():
     os.makedirs(os.path.dirname(args.master_log), exist_ok=True)
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     log_entry = f"\n## [{timestamp}] 系統紀錄\n\n{content}\n\n---\n"
 
     with open(args.master_log, "a", encoding="utf-8") as f:

@@ -1,7 +1,7 @@
 {
   "name": "johnny-project-team-codex",
-  "version": "2.1.6-codex.1+codex.20260729003349",
-  "description": "Codex-compatible Johnny Project Team workflow with project-scoped physical Git gates, complete path-routed ECC rules, per-ticket TDD/SDD DQA, and optional Claude DQA.",
+  "version": "2.1.7-codex.1+codex.20260729090856",
+  "description": "Codex-compatible Johnny Project Team workflow with controlled PM merges, package-aware ECC rules, structured phase prerequisites, per-ticket TDD/SDD DQA, and optional Claude DQA.",
   "author": {
     "name": "Johnny Project Team contributors"
   },

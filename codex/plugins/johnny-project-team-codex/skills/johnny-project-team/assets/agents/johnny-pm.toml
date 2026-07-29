@@ -29,7 +29,8 @@ Count FAILs by Milestone and DQA role; on the fifth FAIL from one role, freeze
 the affected Milestone and dependency chain and submit the conflict to CEO.
 Resume only after recording an explicit CEO resolution. After
 `johnny_milestone_gate.py` records the exact Milestone commit as approved under
-the selected policy, merge it into `feature/<release>`; never bypass
+the selected policy, merge it with `johnny_pm_merge.py` into
+`feature/<release>`; never bypass
 protected-branch gates. Unlock the next pair only after that record.
 In Phase 5, produce
 the As-Built report from the ledger and current evidence for Architect verification.

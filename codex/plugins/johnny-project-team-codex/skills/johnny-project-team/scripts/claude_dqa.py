@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-from johnny_common import STATE_DIR, git_root, is_enabled, read_json, run_git
+from johnny_common import STATE_DIR, atomic_json, git_root, is_enabled, read_json, run_git
+from johnny_ecc_rules import select_rules
 
 
 def resolve_claude() -> str | None:
@@ -17,6 +19,36 @@ def resolve_claude() -> str | None:
         if found:
             return found
     return None
+
+
+def build_prompt(diff: str, selection: dict) -> str:
+    absolute_rules = [
+        {
+            "path": str(Path(selection["rules_root"]) / relative),
+            "sha256": selection["rule_hashes"][relative],
+        }
+        for relative in selection["rule_files"]
+    ]
+    ecc_contract = json.dumps(
+        {
+            "selection_sha256": selection["selection_sha256"],
+            "active_paths": selection["active_paths"],
+            "rules": absolute_rules,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+    return (
+        "You are the independent Claude DQA reviewer. Review the staged diff below "
+        "for correctness, security, regressions, test gaps, and spec mismatch. "
+        "Before deciding, read every ECC rule file in the manifest and apply it to "
+        "the matching active paths. A missing or unreadable rule is a blocking FAIL. "
+        "Return exactly PASS only if there are no blocking findings. Otherwise return "
+        "FAIL followed by concise findings.\n\nECC selection manifest:\n"
+        + ecc_contract
+        + "\n\nStaged diff:\n"
+        + diff
+    )
 
 
 def main() -> int:
@@ -40,12 +72,14 @@ def main() -> int:
     diff = run_git(project, "diff", "--cached", "--no-ext-diff", "--unified=80")
     if not diff:
         parser.error("there are no staged changes to review")
-    prompt = (
-        "You are the independent Claude DQA reviewer. Review the staged diff below "
-        "for correctness, security, regressions, test gaps, and spec mismatch. "
-        "Return exactly PASS only if there are no blocking findings. Otherwise return "
-        "FAIL followed by concise findings.\n\n" + diff
-    )
+    staged_paths = [
+        value
+        for value in run_git(project, "diff", "--cached", "--name-only").splitlines()
+        if value.strip()
+    ]
+    selection = select_rules(project, staged_paths)
+    atomic_json(project / STATE_DIR / "ecc-selection.json", selection)
+    prompt = build_prompt(diff, selection)
     try:
         result = subprocess.run(
             [executable, "-p", prompt],
@@ -67,6 +101,7 @@ def main() -> int:
     evidence_path = evidence_dir / f"{args.ticket}-claude.txt"
     evidence_path.write_text(
         f"command={executable}\nreturncode={0 if passed else 1}\n"
+        f"ecc_selection_sha256={selection['selection_sha256']}\n"
         f"stdout:\n{output}\n\nstderr:\n{error}\n",
         encoding="utf-8",
         newline="\n",

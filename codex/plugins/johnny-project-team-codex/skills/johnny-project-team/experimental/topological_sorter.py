@@ -1,4 +1,4 @@
-﻿import argparse
+import argparse
 import sys
 import json
 import datetime
@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     print(f"[HOOK] topological_sorter 開始執行...")
-    
+
     result_data = {
         "tool": "topological_sorter",
         "status": "SUCCESS",
@@ -26,7 +26,7 @@ def main():
         output_str = json.dumps(result_data, indent=2, ensure_ascii=False)
     else:
         output_str = f"[{result_data['status']}] {result_data['tool']} 執行完畢: {result_data['message']}"
-        
+
     if args.output != "none":
         try:
             with open(args.output, "w", encoding="utf-8") as f:

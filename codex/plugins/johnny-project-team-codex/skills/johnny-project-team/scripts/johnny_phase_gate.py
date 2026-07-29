@@ -15,6 +15,7 @@ from johnny_common import (
     read_json,
     state_lock,
 )
+from johnny_phase_prerequisites import validate_phase_evidence
 
 
 def main() -> int:
@@ -22,6 +23,7 @@ def main() -> int:
     parser.add_argument("--project", type=Path, required=True)
     parser.add_argument("--to-phase", type=int, required=True, choices=range(0, 7))
     parser.add_argument("--approval", required=True)
+    parser.add_argument("--evidence", type=Path)
     parser.add_argument(
         "--execution-policy",
         choices=("SUPERVISED", "AUTONOMOUS"),
@@ -33,6 +35,14 @@ def main() -> int:
         parser.error("project is not enabled")
     if not args.approval.strip():
         parser.error("explicit user approval text is required")
+    if args.to_phase == 3 and args.execution_policy is None:
+        parser.error(
+            "Phase 2 completion requires --execution-policy SUPERVISED or AUTONOMOUS"
+        )
+    try:
+        prerequisite = validate_phase_evidence(args.to_phase, args.evidence)
+    except ValueError as error:
+        parser.error(str(error))
 
     # Only the short state transaction is locked. No external process runs here.
     with state_lock(project):
@@ -54,6 +64,7 @@ def main() -> int:
                 "revision": int(state.get("revision", 0)) + 1,
                 "approved_at": datetime.now(timezone.utc).isoformat(),
                 "approval": args.approval.strip(),
+                **({"prerequisite_evidence": prerequisite} if prerequisite else {}),
             }
         )
         if args.to_phase == 3:
@@ -73,6 +84,7 @@ def main() -> int:
                 "approval": args.approval.strip(),
                 "approved_at": state["approved_at"],
                 "revision": state["revision"],
+                **({"prerequisite_evidence": prerequisite} if prerequisite else {}),
                 **(
                     {"execution_policy": args.execution_policy}
                     if args.to_phase == 3

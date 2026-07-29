@@ -71,6 +71,10 @@ def validate_dqa(project: Path, paths: list[str], config: dict, state: dict) -> 
         fail("DQA evidence is missing or stale for the product subject tree")
     if status.get("commit_tree") != staged_tree(project):
         fail("DQA evidence does not match the complete staged commit tree")
+    selection = read_json(project / STATE_DIR / "ecc-selection.json", {}) or {}
+    selection_hash = selection.get("selection_sha256")
+    if not selection_hash or status.get("ecc_selection_sha256") != selection_hash:
+        fail("DQA evidence is missing or stale for the active ECC selection")
     escalation = status.get("escalation") or {}
     if escalation.get("active", False):
         fail(
@@ -85,6 +89,14 @@ def validate_dqa(project: Path, paths: list[str], config: dict, state: dict) -> 
     missing = [name for name in required if results.get(name) != "PASS"]
     if missing:
         fail("required DQA did not pass: " + ", ".join(missing))
+    reviews = status.get("reviews", {})
+    stale_rules = [
+        name
+        for name in required
+        if (reviews.get(name) or {}).get("ecc_selection_sha256") != selection_hash
+    ]
+    if stale_rules:
+        fail("DQA review used a different ECC selection: " + ", ".join(stale_rules))
 
 
 def validate_branch(project: Path, config: dict, state: dict, event: str) -> None:

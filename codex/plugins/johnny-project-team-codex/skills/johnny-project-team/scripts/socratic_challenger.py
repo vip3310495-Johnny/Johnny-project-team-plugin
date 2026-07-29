@@ -9,25 +9,25 @@ def scan_codebase(root_dir="."):
     """簡易的 Codebase 掃描，回傳前 10 個核心檔案與專案特徵"""
     print(f"[SCAN] 正在掃描專案: {os.path.abspath(root_dir)}")
     features = []
-    
+
     if os.path.exists(os.path.join(root_dir, "package.json")):
         features.append("Node.js 專案")
     if os.path.exists(os.path.join(root_dir, "requirements.txt")) or os.path.exists(os.path.join(root_dir, "pyproject.toml")):
         features.append("Python 專案")
-        
+
     core_files = []
     try:
         # 使用 git ls-files 抓取受控檔案
         result = subprocess.run(["git", "ls-files"], cwd=root_dir, capture_output=True, text=True, check=True)
         files = result.stdout.splitlines()
-        
+
         for f in files:
             if f.startswith("src/") or f.endswith(".py") or f.endswith(".ts") or f.endswith(".tsx"):
                 core_files.append(f)
                 if len(core_files) >= 10: break
     except Exception:
         pass
-        
+
     return features, core_files
 
 def main():
@@ -39,11 +39,11 @@ def main():
     print(f"\n=========================================")
     print(" 🏛️ [Socratic Challenger & Tech Explorer] 🏛️")
     print("=========================================\n")
-    
+
     print("【商業邏輯防禦】")
     print("- 正在檢視需求是否具備明確的商業價值與 MVP 精神...")
     print("- 是否有定義 Non-goals 防止 Scope Creep？")
-    
+
     if args.auto_scan:
         print("\n【技術可行性探索 (類似 /opsx:explore)】")
         features, files = scan_codebase(".")

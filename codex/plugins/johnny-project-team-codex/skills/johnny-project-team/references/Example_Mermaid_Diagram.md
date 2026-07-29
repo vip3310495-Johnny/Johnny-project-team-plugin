@@ -11,14 +11,14 @@ graph TD
     %% 節點定義
     User([使用者]) -->|輸入帳密| UI[前端登入頁面]
     UI -->|POST /api/login| API[後端 API Gateway]
-    
+
     API --> AuthMiddleware{權限驗證}
     AuthMiddleware -->|Token 失效| Error[回傳 401 Error]
     AuthMiddleware -->|通過| AuthController[登入控制器]
-    
+
     AuthController --> DB[(User Database)]
     DB -->|回傳 User Data| AuthController
-    
+
     AuthController --> JWT[簽發 JWT Token]
     JWT -->|回傳 200 OK| UI
     UI -->|重新導向| Dashboard[使用者後台]
@@ -27,7 +27,7 @@ graph TD
     classDef ui fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
     classDef database fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
-    
+
     class UI,Dashboard ui;
     class API,AuthMiddleware,AuthController,JWT backend;
     class DB database;
@@ -46,7 +46,7 @@ sequenceDiagram
 
     U->>F: 填寫 username & password
     F->>B: POST /login {user, pass}
-    
+
     rect rgb(240, 240, 240)
         note right of B: 密碼雜湊比對
         B->>D: SELECT hash FROM users WHERE user=?

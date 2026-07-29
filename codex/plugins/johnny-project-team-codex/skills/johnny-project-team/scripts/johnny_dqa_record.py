@@ -14,12 +14,15 @@ from johnny_common import (
     git_root,
     is_enabled,
     read_json,
+    run_git,
     staged_tree,
     state_lock,
     subject_tree,
 )
+from johnny_ecc_rules import select_rules
 
 ROLES = ("tdd", "sdd", "claude")
+DQA_ESCALATION_THRESHOLD = 5
 
 
 def utc_now() -> str:
@@ -143,6 +146,13 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
     reviewer = args.reviewer_id.strip()
     if not ticket or not evidence or not reviewer:
         parser.error("ticket, evidence, and reviewer-id must be non-empty")
+    staged_paths = [
+        value
+        for value in run_git(project, "diff", "--cached", "--name-only").splitlines()
+        if value.strip()
+    ]
+    selection = select_rules(project, staged_paths)
+    atomic_json(project / STATE_DIR / "ecc-selection.json", selection)
 
     status_path = project / STATE_DIR / "dqa-status.json"
     with state_lock(project):
@@ -151,6 +161,10 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
             prior.get("schema_version") != 2
             or prior.get("subject_tree") != current_subject
             or prior.get("scope", "ticket") != args.scope
+            or prior.get("ecc_selection_sha256") not in (
+                None,
+                selection["selection_sha256"],
+            )
         ):
             status = new_status(
                 prior=prior,
@@ -160,6 +174,7 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
                 current_commit=current_commit,
                 roles=roles,
             )
+            status["ecc_selection_sha256"] = selection["selection_sha256"]
             append_history(
                 project,
                 "cycle-opened",
@@ -173,6 +188,7 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
                     f"subject tree is already bound to ticket {status.get('ticket')}"
                 )
             status["commit_tree"] = current_commit
+        status["ecc_selection_sha256"] = selection["selection_sha256"]
         escalation = status.get("escalation")
         if escalation and escalation.get("active", False):
             parser.error(
@@ -197,6 +213,7 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
             "evidence": evidence,
             "reviewer_id": reviewer,
             "reviewed_at": utc_now(),
+            "ecc_selection_sha256": selection["selection_sha256"],
         }
         reviews[args.role] = review
         results[args.role] = args.result
@@ -266,11 +283,7 @@ def record_verdict(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
             ]
             append_history(project, "verdict", status, {"role": args.role, **review})
         if args.result == "FAIL" and args.scope == "ticket":
-            limit = int(
-                config.get("dqa_escalation", {}).get(
-                    "max_rejections_per_role_per_milestone", 5
-                )
-            )
+            limit = DQA_ESCALATION_THRESHOLD
             if rejection_count is not None and rejection_count >= limit:
                 status["escalation"] = {
                     "active": True,

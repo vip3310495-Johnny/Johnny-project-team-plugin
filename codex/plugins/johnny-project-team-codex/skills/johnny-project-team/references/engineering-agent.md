@@ -58,8 +58,8 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 工程師只可使用主 Skill 與 `references/script-catalog.md` 列出的正式腳本。實驗性
 腳本不具品質保證，不得被工作流、Hook 或 Agent 指令呼叫。開發時使用專案在
 `.agents/context-manifest.json` 宣告的 route，以及 Task Context Pack 的 build、lint、type-check 與 test 指令；
-狀態變更與送審則使用 `johnny_phase_gate.py`、`johnny_te_dispatch.py` 與
-`johnny_dqa_record.py`。
+狀態變更與送審使用 `johnny_phase_gate.py`、`te_dispatch_plan.py` 與
+`johnny_dqa_record.py`；TE dispatch plan 只計算容量，不會自行提交 verdict。
 
 # 四、 協作工作流 (Collaboration Workflow in DQA-Driven Team)
 
@@ -71,4 +71,4 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 6. **規格驅動測試 (Spec-Driven Test)：** 先寫會失敗且對應驗收條件的測試，再實作；執行 Context Pack 宣告的 test、coverage 與 security 指令並保存證據。
 7. **交接前強迫同步 (Pre-Handoff Sync) [CRITICAL]：** 在進行冒煙測試前，工程師**必須強制**將主分支 (`feature/<project-name>`) 的最新進度合併 (Merge) 或 Rebase 到自己的個人分支中。如果發生 Git 衝突，必須自行手動解決並 Commit，絕不允許將未同步的「過期分支 (Stale Branch)」送審。
 8. **冒煙測試左移防線 (Smoke Test Barrier) [CRITICAL]：** 在確認程式碼已同步後，工程師**必須強制**在終端機執行一次基礎的編譯或啟動測試 (如 `npm run build` 或 `python main.py`)，**並且必須執行專案的 Linter 與 Type-checker (如 `eslint`, `mypy`) 確保 0 error**。若連基本編譯或 Lint 都報錯，絕對不准交接給 PM 與 DQA。
-9. **交付 DQA (Handoff)：** 確認冒煙測試通過後，於 Ticket handoff 填寫變更摘要、How to Run、測試結果與證據路徑，再由 `johnny_te_dispatch.py` 依序送交 TDD DQA 與 SDD DQA。
+9. **交付 DQA (Handoff)：** 確認冒煙測試通過後，於 Ticket handoff 填寫變更摘要、How to Run、測試結果、ECC selection hash 與證據路徑；PM 依序啟動 TDD DQA 與 SDD DQA，DQA 可用 `te_dispatch_plan.py` 計算 TE 容量。

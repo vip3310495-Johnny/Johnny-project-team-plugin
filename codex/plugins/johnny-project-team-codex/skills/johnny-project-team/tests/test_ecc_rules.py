@@ -18,6 +18,7 @@ from johnny_ecc_rules import (
     rule_globs,
     select_rules,
 )
+from claude_dqa import build_prompt
 
 
 def write_project(
@@ -145,3 +146,36 @@ def test_nested_package_manifests_are_detected_in_monorepos(tmp_path: Path) -> N
     assert "react-native" in selection["detected_rulesets"]
     assert "react" not in selection["detected_rulesets"]
     assert "web" not in selection["detected_rulesets"]
+
+
+def test_mixed_monorepo_routes_each_active_path_by_owning_package(tmp_path: Path) -> None:
+    write_project(tmp_path, "apps/mobile/App.tsx")
+    write_project(tmp_path, "apps/web/App.tsx")
+    (tmp_path / "apps/mobile/package.json").write_text(
+        json.dumps({"dependencies": {"react": "latest", "react-native": "latest"}}),
+        encoding="utf-8",
+    )
+    (tmp_path / "apps/web/package.json").write_text(
+        json.dumps({"dependencies": {"react": "latest"}}),
+        encoding="utf-8",
+    )
+
+    mobile = select_rules(tmp_path, ["apps/mobile/App.tsx"])
+    web = select_rules(tmp_path, ["apps/web/App.tsx"])
+
+    assert mobile["detected_rulesets"] == ["common", "react-native", "typescript"]
+    assert not any(path.startswith(("react/", "web/")) for path in mobile["rule_files"])
+    assert web["detected_rulesets"] == ["common", "react", "typescript", "web"]
+    assert mobile["packages"][0]["package_root"] == "apps/mobile"
+    assert web["packages"][0]["package_root"] == "apps/web"
+    assert mobile["selection_sha256"] != web["selection_sha256"]
+
+
+def test_claude_prompt_binds_exact_ecc_selection(tmp_path: Path) -> None:
+    write_project(tmp_path, "src/app.py")
+    selection = select_rules(tmp_path, ["src/app.py"])
+    prompt = build_prompt("diff --git a/src/app.py b/src/app.py", selection)
+    assert selection["selection_sha256"] in prompt
+    assert "read every ECC rule file" in prompt
+    expected_path = str(Path(selection["rules_root"]) / "python/security.md")
+    assert json.dumps(expected_path)[1:-1] in prompt

@@ -15,7 +15,7 @@ RULE_SCRIPT_DIR = (
 )
 sys.path.insert(0, str(RULE_SCRIPT_DIR))
 
-from johnny_ecc_rules import format_context, select_rules
+from johnny_ecc_rules import format_context, load_or_select_rules
 
 
 def main() -> int:
@@ -67,7 +67,7 @@ def main() -> int:
         "Return evidence to the parent role; do not advance Phase or write DQA verdicts."
     )
     try:
-        context += " " + format_context(select_rules(project))
+        context += " " + format_context(load_or_select_rules(project))
     except (OSError, RuntimeError, subprocess.SubprocessError) as error:
         context += f" ECC rule routing unavailable: {error}."
     print(

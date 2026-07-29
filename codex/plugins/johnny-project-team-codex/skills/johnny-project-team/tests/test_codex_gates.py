@@ -28,7 +28,7 @@ def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
 
 @pytest.fixture()
 def repo(tmp_path: Path) -> Path:
-    git(tmp_path, "init")
+    git(tmp_path, "init", "-b", "main")
     git(tmp_path, "config", "user.email", "test@example.invalid")
     git(tmp_path, "config", "user.name", "Test")
     (tmp_path / "README.md").write_text("initial\n", encoding="utf-8")
@@ -45,6 +45,48 @@ def run_script(name: str, *args: str, check: bool = True):
         text=True,
         encoding="utf-8",
     )
+
+
+def phase_evidence(repo: Path, to_phase: int) -> Path:
+    common = {"schema_version": 1, "to_phase": to_phase}
+    if to_phase == 1:
+        common.update(
+            {
+                "intent": ["intent"],
+                "non_goals": ["non-goal"],
+                "observable_outcomes": ["outcome"],
+                "risks": ["risk"],
+            }
+        )
+    elif to_phase == 3:
+        common.update(
+            {
+                "scope_contract_matrix": ["PM/Phase_Contract_Matrix.md"],
+                "milestones": ["M01"],
+                "task_context_packs": ["PM/Context/M01.md"],
+                "model_matrix": [
+                    {
+                        "role": role,
+                        "model": "test-model",
+                        "availability": "AVAILABLE",
+                        "approved_by": "CEO",
+                    }
+                    for role in ("PM", "Architect", "Engineer", "TDD DQA", "SDD DQA")
+                ],
+            }
+        )
+    else:
+        common.update(
+            {
+                "integrated_tdd": "PASS",
+                "integrated_sdd": "PASS",
+                "fixed_tolerance_evidence": ["TDD_DQA/final.md"],
+                "as_built_inputs": ["PM/ledger.md"],
+            }
+        )
+    path = repo / f"phase-{to_phase}-evidence.json"
+    path.write_text(json.dumps(common), encoding="utf-8")
+    return path
 
 
 def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
@@ -101,6 +143,8 @@ def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
     assert config["ecc_rules"] == {
         "enabled": True,
         "selector": "johnny_ecc_rules.py",
+        "selection_schema_version": 2,
+        "selection_manifest": ".johnny/ecc-selection.json",
         "common_always": True,
         "require_every_selected_file": True,
     }
@@ -159,6 +203,7 @@ def test_phase_requires_one_step_and_approval(repo: Path) -> None:
         "--project", str(repo),
         "--to-phase", "1",
         "--approval", "User explicitly approved phase 1",
+        "--evidence", str(phase_evidence(repo, 1)),
     )
     state = json.loads((repo / ".johnny/state.json").read_text(encoding="utf-8"))
     assert state["phase"] == 1
@@ -167,11 +212,16 @@ def test_phase_requires_one_step_and_approval(repo: Path) -> None:
 def test_phase2_requires_execution_policy_for_phase3(repo: Path) -> None:
     run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
     for phase in (1, 2):
-        run_script(
-            "johnny_phase_gate.py",
+        arguments = [
             "--project", str(repo),
             "--to-phase", str(phase),
             "--approval", f"CEO approved phase {phase}",
+        ]
+        if phase == 1:
+            arguments.extend(["--evidence", str(phase_evidence(repo, 1))])
+        run_script(
+            "johnny_phase_gate.py",
+            *arguments,
         )
     missing = run_script(
         "johnny_phase_gate.py",
@@ -188,10 +238,43 @@ def test_phase2_requires_execution_policy_for_phase3(repo: Path) -> None:
         "--to-phase", "3",
         "--execution-policy", "AUTONOMOUS",
         "--approval", "CEO delegated autonomous Milestone approval",
+        "--evidence", str(phase_evidence(repo, 3)),
     )
     state = json.loads((repo / ".johnny/state.json").read_text(encoding="utf-8"))
     assert state["execution_policy"]["mode"] == "AUTONOMOUS"
     assert state["execution_policy"]["delegated_by"] == "CEO"
+
+
+def test_phase3_rejects_unavailable_or_unapproved_model_matrix(repo: Path) -> None:
+    run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
+    run_script(
+        "johnny_phase_gate.py",
+        "--project", str(repo),
+        "--to-phase", "1",
+        "--approval", "approved",
+        "--evidence", str(phase_evidence(repo, 1)),
+    )
+    run_script(
+        "johnny_phase_gate.py",
+        "--project", str(repo),
+        "--to-phase", "2",
+        "--approval", "approved",
+    )
+    evidence = json.loads(phase_evidence(repo, 3).read_text(encoding="utf-8"))
+    evidence["model_matrix"][0]["availability"] = "UNKNOWN"
+    path = repo / "invalid-model-matrix.json"
+    path.write_text(json.dumps(evidence), encoding="utf-8")
+    rejected = run_script(
+        "johnny_phase_gate.py",
+        "--project", str(repo),
+        "--to-phase", "3",
+        "--execution-policy", "AUTONOMOUS",
+        "--approval", "approved",
+        "--evidence", str(path),
+        check=False,
+    )
+    assert rejected.returncode != 0
+    assert "availability=AVAILABLE" in rejected.stderr
 
 
 def test_guard_fails_open_without_activation(repo: Path) -> None:
@@ -468,6 +551,19 @@ def test_phase3_dqa_is_ordered_and_tree_bound(repo: Path) -> None:
         "--evidence", "contract checked",
         "--reviewer-id", "sdd-1",
     )
+    selection_path = repo / ".johnny/ecc-selection.json"
+    selection = json.loads(selection_path.read_text(encoding="utf-8"))
+    selection["selection_sha256"] = "stale-selection"
+    selection_path.write_text(json.dumps(selection), encoding="utf-8")
+    stale_rules = git(repo, "commit", "-m", "wrong ECC selection", check=False)
+    assert stale_rules.returncode != 0
+    assert "stale for the active ECC selection" in (
+        stale_rules.stdout + stale_rules.stderr
+    )
+    selection["selection_sha256"] = json.loads(
+        (repo / ".johnny/dqa-status.json").read_text(encoding="utf-8")
+    )["ecc_selection_sha256"]
+    selection_path.write_text(json.dumps(selection), encoding="utf-8")
     git(repo, "commit", "-m", "ticket M01")
 
     product.write_text("VALUE = 2\n", encoding="utf-8")
@@ -516,6 +612,10 @@ def test_fifth_same_role_rejection_freezes_until_ceo_resolution(repo: Path) -> N
         "approval": "test delegation",
     }
     state_path.write_text(json.dumps(state), encoding="utf-8")
+    config_path = repo / ".johnny/config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["dqa_escalation"]["max_rejections_per_role_per_milestone"] = 2
+    config_path.write_text(json.dumps(config), encoding="utf-8")
     (repo / "src").mkdir()
     product = repo / "src/feature.py"
 
@@ -568,11 +668,16 @@ def test_fifth_same_role_rejection_freezes_until_ceo_resolution(repo: Path) -> N
 def test_autonomous_milestone_uses_phase2_delegation(repo: Path) -> None:
     run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
     for phase in (1, 2):
-        run_script(
-            "johnny_phase_gate.py",
+        arguments = [
             "--project", str(repo),
             "--to-phase", str(phase),
             "--approval", f"CEO approved phase {phase}",
+        ]
+        if phase == 1:
+            arguments.extend(["--evidence", str(phase_evidence(repo, 1))])
+        run_script(
+            "johnny_phase_gate.py",
+            *arguments,
         )
     run_script(
         "johnny_phase_gate.py",
@@ -580,6 +685,7 @@ def test_autonomous_milestone_uses_phase2_delegation(repo: Path) -> None:
         "--to-phase", "3",
         "--execution-policy", "AUTONOMOUS",
         "--approval", "CEO delegated autonomous Milestone approval",
+        "--evidence", str(phase_evidence(repo, 3)),
     )
     git(repo, "switch", "-c", "codex/milestone-M04")
     (repo / "src").mkdir()
@@ -605,3 +711,50 @@ def test_autonomous_milestone_uses_phase2_delegation(repo: Path) -> None:
     assert milestone["execution_policy"] == "AUTONOMOUS"
     assert milestone["approval_source"] == "phase2-ceo-delegation"
     assert milestone["approval"] == "CEO delegated autonomous Milestone approval"
+    run_script(
+        "johnny_pm_merge.py",
+        "--project", str(repo),
+        "--ticket", "M04",
+        "--target", "main",
+    )
+    assert git(repo, "branch", "--show-current").stdout.strip() == "main"
+    merge = json.loads((repo / ".johnny/merge-status.json").read_text(encoding="utf-8"))
+    assert merge["status"] == "MERGED"
+    assert merge["source_branch"] == "codex/milestone-M04"
+    assert merge["target_branch"] == "main"
+    assert merge["push_status"] == "NOT_REQUESTED"
+
+
+def test_migrate_upgrades_managed_contracts_and_preserves_custom_config(repo: Path) -> None:
+    run_script("johnny_project_hooks.py", "enable", "--project", str(repo))
+    config_path = repo / ".johnny/config.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["schema_version"] = 1
+    config["custom_project_choice"] = {"keep": True}
+    config["dqa_escalation"]["max_rejections_per_role_per_milestone"] = 9
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    manifest_path = repo / ".agents/context-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["ecc_rules"]["supported_rule_sets"] = ["common"]
+    manifest["custom_route"] = "keep"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    custom_agent = repo / ".codex/agents/johnny-pm.toml"
+    custom_agent.write_text("name = \"custom_pm\"\n", encoding="utf-8")
+    stale_hook = repo / ".johnny/git-hooks/pre-commit"
+    stale_hook.write_text("#!/bin/sh\nexec /removed/cache/johnny_guard.py\n", encoding="utf-8")
+
+    run_script("johnny_project_hooks.py", "migrate", "--project", str(repo))
+
+    migrated = json.loads(config_path.read_text(encoding="utf-8"))
+    assert migrated["schema_version"] == 2
+    assert migrated["custom_project_choice"] == {"keep": True}
+    assert migrated["dqa_escalation"]["max_rejections_per_role_per_milestone"] == 5
+    assert "apps/" in migrated["allowed_code_roots"]
+    assert "apps/" in migrated["product_paths"]
+    refreshed_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert refreshed_manifest["custom_route"] == "keep"
+    assert "react-native" in refreshed_manifest["ecc_rules"]["supported_rule_sets"]
+    assert custom_agent.read_text(encoding="utf-8") == 'name = "custom_pm"\n'
+    expected_guard = str((SCRIPTS / "johnny_guard.py").resolve()).replace("\\", "/")
+    assert expected_guard in stale_hook.read_text(encoding="utf-8")
+    assert (repo / ".johnny/migration-history.jsonl").is_file()

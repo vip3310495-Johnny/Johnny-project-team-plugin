@@ -17,10 +17,10 @@ def main():
     print("\n🚨 [HOOK] analysis_paralysis_breaker 啟動！偵測到決策癱瘓。")
     print("================================================================")
     print("CEO，專案不能無限期停滯。根據反通靈與強勢提案鐵律，我們必須立刻做出決定。")
-    
+
     if args.context:
         print(f"針對當前困境：{args.context}")
-        
+
     print("\n💡 【系統強勢裁決】")
     print("我們已為您收斂出兩個最安全的選項。請直接回答 A 或 B：\n")
     print("選項 [A]: 採用最保守、開發最快的主流方案 (MVP 優先)。")

@@ -15,18 +15,20 @@ because an older filename or document called it one.
 
 | Script | Application |
 |---|---|
-| `scripts/johnny_project_hooks.py` | Run `enable`, `status`, or `disable`. Enable only after a clean initial commit. It installs repo-local Git gates, agent profiles, project rules, and context manifest without overwriting user files. |
+| `scripts/johnny_project_hooks.py` | Run `enable`, `status`, `migrate`, or `disable`. `migrate` upgrades managed config and context routes without replacing unrelated project choices. |
 | `scripts/johnny_guard.py` | Called only by generated `pre-commit` and `pre-push`. Validate branch, staged paths, DQA schema, product `subject_tree`, complete `commit_tree`, and required verdicts. Never invoke it as a reviewer. |
 
 ## State-changing commands
 
 | Script | Application |
 |---|---|
-| `scripts/johnny_phase_gate.py` | Advance exactly one Phase after explicit approval; for Phase 2→3 require `--execution-policy SUPERVISED|AUTONOMOUS`. Atomically update state and append `.johnny/approval-history.jsonl`. |
+| `scripts/johnny_phase_gate.py` | Advance exactly one Phase after explicit approval. Transitions to Phase 1, 3, and 5 require structured `--evidence`; Phase 2→3 also requires `--execution-policy`. |
+| `scripts/johnny_phase_prerequisites.py` | Import-only validator for Phase 0, Phase 2 Model Matrix, and Phase 4 acceptance evidence. Do not execute directly. |
 | `scripts/johnny_dqa_record.py` | Use `verdict` as the only TDD, SDD, or Claude verdict entry, `reopen` for explicit rejection cycles, and `resolve-escalation` after the fifth same-role FAIL on one Milestone. Require evidence and append every transition to `.johnny/dqa-history.jsonl`. |
 | `scripts/johnny_milestone_gate.py` | After the DQA-approved tree is committed, record one tree-bound Milestone approval. Require `--approval` under SUPERVISED; under AUTONOMOUS use the Phase 2 CEO delegation and never fabricate a fresh CEO message. |
+| `scripts/johnny_pm_merge.py` | Merge one approved `codex/milestone-Mxx` into `feature/*` or `main` after clean-tree, approval, DQA, escalation, branch-ID, and conflict checks. Use explicit `--push` for the controlled origin push; write merge/push evidence and history. |
 | `scripts/claude_dqa.py` | Manually run the real Claude CLI after TDD and SDD PASS. Save raw evidence and submit the result through `johnny_dqa_record.py`; never run from a hook. |
-| `scripts/johnny_rules_refresh.py` | Explicitly validate context routes, run the ECC selector, and write `.agents/session-context.json` with exact applicable rule files. Use after changing rules, Phase routing, technology, active product paths, or the context manifest. |
+| `scripts/johnny_rules_refresh.py` | Run with `--paths <active-product-paths>` to write the shared `.johnny/ecc-selection.json` hash and `.agents/session-context.json`. Engineer and every reviewer use this same selection. |
 | `scripts/johnny_lesson_record.py` | Atomically validate and store one structured lesson plus append-only history. Use instead of separated verify-then-write flows. |
 | `scripts/log_aggregator.py` | Explicitly append a reviewed Log Agent artifact to `Logs/Master_Log.md`. Never treat a timestamp as proof of workflow completion. |
 | `scripts/run_log_agent.py` | Explicitly run the bounded Log Agent pipeline described in `references/log-agent.md`; never attach it to lifecycle or Git hooks. |

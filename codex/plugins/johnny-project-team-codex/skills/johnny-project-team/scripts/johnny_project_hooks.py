@@ -8,7 +8,17 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from johnny_common import STATE_DIR, atomic_json, git_root, is_enabled, read_json, run_git
+from johnny_common import (
+    STATE_DIR,
+    append_jsonl,
+    atomic_json,
+    git_root,
+    is_enabled,
+    read_json,
+    run_git,
+)
+
+CONFIG_SCHEMA_VERSION = 2
 
 
 def hook_text(guard: Path, event: str, prior_hook: Path | None) -> str:
@@ -28,18 +38,48 @@ def hook_text(guard: Path, event: str, prior_hook: Path | None) -> str:
     return "".join(lines)
 
 
+def install_git_hooks(project: Path, prior: str | None) -> None:
+    """Regenerate local hooks so upgrades never retain a stale plugin path."""
+    hooks_dir = project / STATE_DIR / "git-hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    if prior:
+        prior_hooks_dir = Path(prior)
+        if not prior_hooks_dir.is_absolute():
+            prior_hooks_dir = project / prior_hooks_dir
+    else:
+        git_hooks = run_git(project, "rev-parse", "--git-path", "hooks")
+        prior_hooks_dir = Path(git_hooks)
+        if not prior_hooks_dir.is_absolute():
+            prior_hooks_dir = project / prior_hooks_dir
+    guard = Path(__file__).with_name("johnny_guard.py")
+    for event in ("pre-commit", "pre-push"):
+        hook = hooks_dir / event
+        prior_hook = prior_hooks_dir / event
+        if canonical(prior_hook) == canonical(hook):
+            prior_hook = None
+        hook.write_text(
+            hook_text(guard, event, prior_hook), encoding="utf-8", newline="\n"
+        )
+        hook.chmod(hook.stat().st_mode | 0o111)
+    run_git(project, "config", "--local", "core.hooksPath", f"{STATE_DIR}/git-hooks")
+
+
 def canonical(path: Path) -> Path:
     return path.resolve()
 
 
-def install_agent_templates(project: Path) -> None:
+def install_agent_templates(project: Path, *, preserve_existing: bool = False) -> None:
     source_dir = Path(__file__).resolve().parents[1] / "assets" / "agents"
     target_dir = project / ".codex" / "agents"
     target_dir.mkdir(parents=True, exist_ok=True)
     for source in source_dir.glob("*.toml"):
         target = target_dir / source.name
         content = source.read_text(encoding="utf-8")
-        if target.exists() and target.read_text(encoding="utf-8") != content:
+        if (
+            target.exists()
+            and target.read_text(encoding="utf-8") != content
+            and not preserve_existing
+        ):
             raise RuntimeError(f"refusing to overwrite existing custom agent: {target}")
         if not target.exists():
             target.write_text(content, encoding="utf-8", newline="\n")
@@ -55,6 +95,23 @@ def install_project_rules(project: Path) -> None:
             encoding="utf-8",
             newline="\n",
         )
+    else:
+        content = rules_target.read_text(encoding="utf-8")
+        marker = "<!-- johnny-ecc-selection-v2 -->"
+        if marker not in content:
+            addition = (
+                "\n\n"
+                f"{marker}\n"
+                "For every active ticket, run `johnny_rules_refresh.py --paths "
+                "<active-product-paths>` and require Engineer, DQA, and external "
+                "Claude review evidence to use the resulting "
+                "`.johnny/ecc-selection.json` hash.\n"
+                "Advance to Phase 1, 3, and 5 only with schema-valid `--evidence`; "
+                "Phase 3 evidence must contain an approved AVAILABLE Model Matrix. "
+                "After `johnny_milestone_gate.py`, merge only with "
+                "`johnny_pm_merge.py`.\n"
+            )
+            rules_target.write_text(content.rstrip() + addition, encoding="utf-8", newline="\n")
     manifest_source = templates / "context-manifest.json"
     manifest_target = project / ".agents" / "context-manifest.json"
     manifest_target.parent.mkdir(parents=True, exist_ok=True)
@@ -64,6 +121,61 @@ def install_project_rules(project: Path) -> None:
             encoding="utf-8",
             newline="\n",
         )
+    else:
+        current = read_json(manifest_target, {}) or {}
+        template = read_json(manifest_source, {}) or {}
+        if not isinstance(current, dict):
+            raise RuntimeError(f"unsupported context manifest: {manifest_target}")
+        current.setdefault("required", template.get("required", []))
+        current.setdefault("routes", {})
+        for key, value in template.get("routes", {}).items():
+            current["routes"].setdefault(key, value)
+        current["rules_version"] = template.get("rules_version")
+        current["ecc_rules"] = template.get("ecc_rules", {})
+        current["ecc_selection"] = ".johnny/ecc-selection.json"
+        atomic_json(manifest_target, current)
+
+
+def migrate_config(config: dict) -> dict:
+    """Upgrade managed contracts while preserving unrelated project choices."""
+    config["schema_version"] = CONFIG_SCHEMA_VERSION
+    for key, defaults in {
+        "allowed_code_roots": [
+            "src/", "app/", "apps/", "lib/", "packages/", "services/", "ui/",
+            "tests/", "TDD_DQA/", "SDD_DQA/",
+        ],
+        "product_paths": [
+            "src/", "app/", "apps/", "lib/", "packages/", "services/", "ui/",
+            "config/", "tests/", "package.json", "pyproject.toml",
+        ],
+    }.items():
+        values = list(config.get(key, []))
+        values.extend(value for value in defaults if value not in values)
+        config[key] = values
+    config.setdefault("dqa_escalation", {})
+    config["dqa_escalation"]["max_rejections_per_role_per_milestone"] = 5
+    config["dqa_escalation"]["count_scope"] = "milestone-and-dqa-role"
+    config["dqa_escalation"]["action"] = "freeze-and-escalate-to-ceo"
+    config.setdefault("phase_prerequisites", {})
+    config["phase_prerequisites"].update(
+        {
+            "schema_version": 1,
+            "required_for_transitions": [1, 3, 5],
+            "model_matrix_required_for_phase3": True,
+        }
+    )
+    config.setdefault("ecc_rules", {})
+    config["ecc_rules"].update(
+        {
+            "enabled": True,
+            "selector": "johnny_ecc_rules.py",
+            "selection_schema_version": 2,
+            "selection_manifest": ".johnny/ecc-selection.json",
+            "common_always": True,
+            "require_every_selected_file": True,
+        }
+    )
+    return config
 
 
 def enable(project_arg: Path) -> None:
@@ -146,17 +258,7 @@ def enable(project_arg: Path) -> None:
     config["ticket_flow"]["requires_user_review_each_ticket"] = "by-policy"
     config["ticket_flow"]["unlock_next_after_approval"] = "by-policy"
     config["ticket_flow"].pop("unlock_next_after_user_approval", None)
-    config.setdefault("dqa_escalation", {})
-    config["dqa_escalation"].setdefault(
-        "max_rejections_per_role_per_milestone", 5
-    )
-    config["dqa_escalation"].setdefault("count_scope", "milestone-and-dqa-role")
-    config["dqa_escalation"].setdefault("action", "freeze-and-escalate-to-ceo")
-    config.setdefault("ecc_rules", {})
-    config["ecc_rules"]["enabled"] = True
-    config["ecc_rules"]["selector"] = "johnny_ecc_rules.py"
-    config["ecc_rules"]["common_always"] = True
-    config["ecc_rules"]["require_every_selected_file"] = True
+    config = migrate_config(config)
     atomic_json(config_path, config)
 
     atomic_json(
@@ -169,32 +271,41 @@ def enable(project_arg: Path) -> None:
             "enabled": True,
             "scope": str(project),
             "enabled_at": datetime.now(timezone.utc).isoformat(),
-            "format": 1,
+            "format": 2,
         },
     )
 
-    guard = Path(__file__).with_name("johnny_guard.py")
-    if prior:
-        prior_hooks_dir = Path(prior)
-        if not prior_hooks_dir.is_absolute():
-            prior_hooks_dir = project / prior_hooks_dir
-    else:
-        git_hooks = run_git(project, "rev-parse", "--git-path", "hooks")
-        prior_hooks_dir = Path(git_hooks)
-        if not prior_hooks_dir.is_absolute():
-            prior_hooks_dir = project / prior_hooks_dir
-    for event in ("pre-commit", "pre-push"):
-        hook = hooks_dir / event
-        prior_hook = prior_hooks_dir / event
-        if canonical(prior_hook) == canonical(hook):
-            prior_hook = None
-        hook.write_text(
-            hook_text(guard, event, prior_hook), encoding="utf-8", newline="\n"
-        )
-        hook.chmod(hook.stat().st_mode | 0o111)
-
-    run_git(project, "config", "--local", "core.hooksPath", f"{STATE_DIR}/git-hooks")
+    install_git_hooks(project, prior)
     print(f"Johnny gates enabled only for: {project}")
+
+
+def migrate(project_arg: Path) -> None:
+    project = git_root(project_arg)
+    if not is_enabled(project):
+        raise RuntimeError("enable the project before running migration")
+    install_agent_templates(project, preserve_existing=True)
+    install_project_rules(project)
+    config_path = project / STATE_DIR / "config.json"
+    config = read_json(config_path, {}) or {}
+    before = int(config.get("schema_version", 1))
+    atomic_json(config_path, migrate_config(config))
+    marker_path = project / STATE_DIR / "enabled.json"
+    marker = read_json(marker_path, {}) or {}
+    marker["format"] = 2
+    marker["migrated_at"] = datetime.now(timezone.utc).isoformat()
+    atomic_json(marker_path, marker)
+    prior = read_json(project / STATE_DIR / "previous-hooks-path.json", {}) or {}
+    install_git_hooks(project, prior.get("value"))
+    append_jsonl(
+        project / STATE_DIR / "migration-history.jsonl",
+        {
+            "event": "johnny-project-migration",
+            "from_schema": before,
+            "to_schema": CONFIG_SCHEMA_VERSION,
+            "at": marker["migrated_at"],
+        },
+    )
+    print(f"Johnny project migrated: schema {before} -> {CONFIG_SCHEMA_VERSION}")
 
 
 def disable(project_arg: Path) -> None:
@@ -232,10 +343,15 @@ def status(project_arg: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("enable", "disable", "status"))
+    parser.add_argument("action", choices=("enable", "disable", "status", "migrate"))
     parser.add_argument("--project", type=Path, default=Path.cwd())
     args = parser.parse_args()
-    {"enable": enable, "disable": disable, "status": status}[args.action](args.project)
+    {
+        "enable": enable,
+        "disable": disable,
+        "status": status,
+        "migrate": migrate,
+    }[args.action](args.project)
     return 0
 
 

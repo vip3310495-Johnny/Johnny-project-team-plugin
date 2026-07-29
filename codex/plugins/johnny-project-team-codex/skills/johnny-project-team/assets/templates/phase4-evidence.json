@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "to_phase": 5,
+  "integrated_tdd": "PASS",
+  "integrated_sdd": "PASS",
+  "fixed_tolerance_evidence": ["<evidence path>"],
+  "as_built_inputs": ["<ledger or system evidence path>"]
+}

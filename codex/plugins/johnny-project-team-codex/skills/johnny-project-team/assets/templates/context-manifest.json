@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "rules_version": "2026-07-29-src-delivery-v3",
+  "required": [
+    "JOHNNY_PROJECT_RULES.md",
+    ".johnny/state.json",
+    ".johnny/config.json"
+  ],
+  "routes": {
+    "phase": "active Phase reference under the johnny-project-team skill",
+    "role": "matching .codex/agents/johnny-*.toml profile",
+    "ticket": "active Task Context Pack",
+    "technology": "exact ECC files returned by scripts/johnny_ecc_rules.py for active product paths"
+  },
+  "ecc_rules": {
+    "selector": "scripts/johnny_ecc_rules.py",
+    "rules_root": "references/rules",
+    "common_always": true,
+    "require_every_selected_file": true,
+    "supported_rule_sets": [
+      "common",
+      "angular",
+      "arkts",
+      "cpp",
+      "csharp",
+      "dart",
+      "fsharp",
+      "golang",
+      "java",
+      "kotlin",
+      "nuxt",
+      "perl",
+      "php",
+      "python",
+      "react",
+      "react-native",
+      "ruby",
+      "rust",
+      "swift",
+      "typescript",
+      "vue",
+      "web"
+    ]
+  },
+  "product_layout": {
+    "delivery_root": "src/",
+    "permanent_tests": "src/tests/",
+    "phase3_commit_roots": [
+      "src/"
+    ],
+    "dqa_tool_roots": {
+      "tdd": "TDD_DQA/tool/",
+      "sdd": "SDD_DQA/tool/",
+      "claude": "Claude DQA/tool/"
+    },
+    "te_write_access": false
+  },
+  "model_matrix": "PM/Model_Recommendation_Matrix.md",
+  "task_context_pack": "PM/Context/<ticket-id>.md"
+}

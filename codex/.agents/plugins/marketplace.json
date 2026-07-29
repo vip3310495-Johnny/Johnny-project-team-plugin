@@ -1,0 +1,20 @@
+{
+  "name": "johnny-project-team-github",
+  "interface": {
+    "displayName": "Johnny Project Team GitHub"
+  },
+  "plugins": [
+    {
+      "name": "johnny-project-team-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/johnny-project-team-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

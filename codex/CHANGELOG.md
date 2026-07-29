@@ -1,6 +1,6 @@
 # Codex Edition Changelog
 
-此檔只記錄 `codex/` 版本；Antigravity Edition 使用儲存庫根目錄的
+此檔只記錄 `codex/` 版本；Antigravity Edition 使用同層 `../antigravity/` 的
 `CHANGELOG.md`。
 
 ## 2.1.8-codex.1 — 2026-07-29

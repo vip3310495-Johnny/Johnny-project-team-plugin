@@ -3,8 +3,8 @@
 [![Plugin version](https://img.shields.io/badge/version-2.1.8--codex.1-blue)](plugins/johnny-project-team-codex/.codex-plugin/plugin.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](plugins/johnny-project-team-codex/LICENSE)
 
-這是 Johnny Project Team 的 OpenAI Codex 版本，完整放在 `codex/`，不會覆蓋
-儲存庫根目錄的 Antigravity Edition。
+這是 Johnny Project Team 的 OpenAI Codex 版本；本目錄即為完整版本，不會覆蓋
+同層的 `../antigravity/` Antigravity Edition。
 
 ## 主要功能
 
@@ -75,12 +75,14 @@ Phase 2 → 3 前仍須取得使用者核准。
 
 | 項目 | Codex Edition | Antigravity Edition |
 |---|---|---|
-| 根目錄 | `codex/` | Repository root |
+| 根目錄 | 本目錄 `./` | 同層 `../antigravity/` |
 | Manifest | `.codex-plugin/plugin.json` | `plugin.json` |
 | Agent profiles | `.codex/agents/*.toml` | `agents/*.json` |
 | Hooks | Codex lifecycle hooks | Antigravity hooks |
 
 ## 安裝
+
+請先切換到**儲存庫根目錄**（即包含 `codex/` 與 `antigravity/` 的目錄）後執行：
 
 ```powershell
 codex plugin marketplace add .\codex

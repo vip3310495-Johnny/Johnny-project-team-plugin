@@ -1,7 +1,7 @@
 {
   "name": "johnny-project-team-codex",
-  "version": "2.1.6-codex.1+codex.20260729000739",
-  "description": "Codex-compatible Johnny Project Team workflow with project-scoped physical Git gates, per-ticket TDD/SDD DQA, and optional Claude DQA.",
+  "version": "2.1.6-codex.1+codex.20260729003349",
+  "description": "Codex-compatible Johnny Project Team workflow with project-scoped physical Git gates, complete path-routed ECC rules, per-ticket TDD/SDD DQA, and optional Claude DQA.",
   "author": {
     "name": "Johnny Project Team contributors"
   },
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Johnny Project Team Codex",
-    "shortDescription": "Project phases, ticket DQA gates, and local Git gates.",
-    "longDescription": "Runs the Johnny Project Team workflow in Codex. Every ticket maps one-to-one to a small milestone and passes TDD DQA followed by SDD DQA before user review. Claude DQA is available for manual cross-checking and is off by default.",
+    "shortDescription": "Project phases, complete ECC rules, DQA, and local Git gates.",
+    "longDescription": "Runs the Johnny Project Team workflow in Codex. It routes every bundled ECC common, language, and framework rule to matching code paths. Every ticket maps one-to-one to a small milestone and passes TDD DQA followed by SDD DQA before user review. Claude DQA is available for manual cross-checking and is off by default.",
     "developerName": "Johnny Project Team contributors",
     "category": "Productivity",
     "capabilities": [
@@ -30,6 +30,7 @@
       "Optional Log and Observability Agent",
       "DQA-managed TE delegation",
       "Three-level scope contracts",
+      "Complete path-routed ECC coding rules",
       "One-to-one ticket milestones",
       "Per-ticket TDD then SDD DQA"
     ],

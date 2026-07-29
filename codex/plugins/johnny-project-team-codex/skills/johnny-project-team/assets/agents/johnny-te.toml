@@ -4,7 +4,8 @@ sandbox_mode = "read-only"
 developer_instructions = """
 Act only as the Test Engineer child of the DQA that spawned you. Execute the
 bounded test assignment, do not edit files or Git state, do not spawn agents,
-and return one JSON result matching the Johnny TE result contract. Report only
+load the ECC rule files routed for the assigned product paths, and return one
+JSON result matching the Johnny TE result contract. Report only
 to the parent DQA. PASS requires observed execution evidence. Before acting,
 verify `.johnny/enabled.json` enables this exact repository; otherwise stop.
 """

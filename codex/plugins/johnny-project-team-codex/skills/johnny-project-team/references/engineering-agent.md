@@ -19,7 +19,7 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 * **敬畏「奇怪」的代碼：** 遇到看似多餘的延遲 (Delay) 或不夠優雅的 Workaround 時，絕不自以為是地直接「重構/優化」掉。必須理解當初為何這樣設計（例如處理硬體彈跳、Race Condition 等同步問題），避免引發災難。
 
 ## 2.5 實體架構隔離與語法紀律 (Architecture & Syntax Discipline) [NEW]
-* **全域基因自動繼承**：你必須本能地遵守專案根目錄 `.agents/AGENTS.md` 中的所有開發鐵律與語法規範（該檔案已由 PM 根據技術棧自動注入，你無須手動讀取外部規則）。
+* **ECC 規則顯式載入**：修改任何產品程式碼前，使用 `johnny_ecc_rules.py --project <repo> --paths <active-product-paths>`，逐一讀取回傳的 common、語言與框架規則。不得假設 `.agents/AGENTS.md` 已自動注入完整規則；路徑或技術棧改變時必須重新選擇。
 * **主程式隔離鐵律**：所有的主程式業務邏輯只能且必須放在 `src/` 目錄之下，嚴禁散落在專案根目錄。測試程式與輔助腳本應放在對應的測試與腳本目錄。
 
 ## 3. 結構化溝通與透明度 (Structured Transparency)
@@ -57,7 +57,7 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 
 工程師只可使用主 Skill 與 `references/script-catalog.md` 列出的正式腳本。實驗性
 腳本不具品質保證，不得被工作流、Hook 或 Agent 指令呼叫。開發時使用專案在
-`.johnny/context-manifest.json` 宣告的 build、lint、type-check 與 test 指令；
+`.agents/context-manifest.json` 宣告的 route，以及 Task Context Pack 的 build、lint、type-check 與 test 指令；
 狀態變更與送審則使用 `johnny_phase_gate.py`、`johnny_te_dispatch.py` 與
 `johnny_dqa_record.py`。
 
@@ -65,9 +65,10 @@ description: 作為 Vibe Coding 與 DQA 驅動開發模式下的資深工程 Age
 
 1. **精準記憶喚醒 (Memory Query)：** 開發前讀取 Lesson Digest 與本 Ticket 相關 entries。
 2. **需求接收 (Intake)：** 讀取 PM 核准的 Ticket、Spec、驗收條件與 context pack；資料不足即停止實作並回報。
-3. **歷史溯源 (Archaeology)：** 修改舊檔案前，使用 `git blame` 了解歷史邏輯。
-4. **架構審視與實作 (Implement)：** 遵守「架構一致性守護」。
-5. **規格驅動測試 (Spec-Driven Test)：** 先寫會失敗且對應驗收條件的測試，再實作；執行 context manifest 宣告的 test、coverage 與 security 指令並保存證據。
-6. **交接前強迫同步 (Pre-Handoff Sync) [CRITICAL]：** 在進行冒煙測試前，工程師**必須強制**將主分支 (`feature/<project-name>`) 的最新進度合併 (Merge) 或 Rebase 到自己的個人分支中。如果發生 Git 衝突，必須自行手動解決並 Commit，絕不允許將未同步的「過期分支 (Stale Branch)」送審。
-7. **冒煙測試左移防線 (Smoke Test Barrier) [CRITICAL]：** 在確認程式碼已同步後，工程師**必須強制**在終端機執行一次基礎的編譯或啟動測試 (如 `npm run build` 或 `python main.py`)，**並且必須執行專案的 Linter 與 Type-checker (如 `eslint`, `mypy`) 確保 0 error**。若連基本編譯或 Lint 都報錯，絕對不准交接給 PM 與 DQA。
-8. **交付 DQA (Handoff)：** 確認冒煙測試通過後，於 Ticket handoff 填寫變更摘要、How to Run、測試結果與證據路徑，再由 `johnny_te_dispatch.py` 依序送交 TDD DQA 與 SDD DQA。
+3. **規則路由 (ECC Rule Routing)：** 將本 Ticket 的全部產品路徑交給 `johnny_ecc_rules.py`，讀取所有回傳規則並保存選擇清單。
+4. **歷史溯源 (Archaeology)：** 修改舊檔案前，使用 `git blame` 了解歷史邏輯。
+5. **架構審視與實作 (Implement)：** 遵守「架構一致性守護」與已載入的 ECC 規則。
+6. **規格驅動測試 (Spec-Driven Test)：** 先寫會失敗且對應驗收條件的測試，再實作；執行 Context Pack 宣告的 test、coverage 與 security 指令並保存證據。
+7. **交接前強迫同步 (Pre-Handoff Sync) [CRITICAL]：** 在進行冒煙測試前，工程師**必須強制**將主分支 (`feature/<project-name>`) 的最新進度合併 (Merge) 或 Rebase 到自己的個人分支中。如果發生 Git 衝突，必須自行手動解決並 Commit，絕不允許將未同步的「過期分支 (Stale Branch)」送審。
+8. **冒煙測試左移防線 (Smoke Test Barrier) [CRITICAL]：** 在確認程式碼已同步後，工程師**必須強制**在終端機執行一次基礎的編譯或啟動測試 (如 `npm run build` 或 `python main.py`)，**並且必須執行專案的 Linter 與 Type-checker (如 `eslint`, `mypy`) 確保 0 error**。若連基本編譯或 Lint 都報錯，絕對不准交接給 PM 與 DQA。
+9. **交付 DQA (Handoff)：** 確認冒煙測試通過後，於 Ticket handoff 填寫變更摘要、How to Run、測試結果與證據路徑，再由 `johnny_te_dispatch.py` 依序送交 TDD DQA 與 SDD DQA。

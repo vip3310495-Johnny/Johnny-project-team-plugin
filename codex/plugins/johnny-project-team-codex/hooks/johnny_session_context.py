@@ -7,6 +7,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+RULE_SCRIPT_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "skills"
+    / "johnny-project-team"
+    / "scripts"
+)
+sys.path.insert(0, str(RULE_SCRIPT_DIR))
+
+from johnny_ecc_rules import format_context, select_rules
+
 
 def read_json(path: Path) -> dict:
     try:
@@ -63,6 +73,10 @@ def main() -> int:
     )
     if rules.is_file():
         context += rules.read_text(encoding="utf-8")[:4000]
+    try:
+        context += " " + format_context(select_rules(project))
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        context += f" ECC rule routing unavailable: {error}."
     if missing:
         context += " Missing required context files: " + ", ".join(missing)
     print(

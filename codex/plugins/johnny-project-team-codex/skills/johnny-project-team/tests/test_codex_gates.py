@@ -98,6 +98,39 @@ def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
         "count_scope": "milestone-and-dqa-role",
         "action": "freeze-and-escalate-to-ceo",
     }
+    assert config["ecc_rules"] == {
+        "enabled": True,
+        "selector": "johnny_ecc_rules.py",
+        "common_always": True,
+        "require_every_selected_file": True,
+    }
+    manifest = json.loads(
+        (repo / ".agents/context-manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["ecc_rules"]["supported_rule_sets"] == [
+        "common",
+        "angular",
+        "arkts",
+        "cpp",
+        "csharp",
+        "dart",
+        "fsharp",
+        "golang",
+        "java",
+        "kotlin",
+        "nuxt",
+        "perl",
+        "php",
+        "python",
+        "react",
+        "react-native",
+        "ruby",
+        "rust",
+        "swift",
+        "typescript",
+        "vue",
+        "web",
+    ]
     run_script("johnny_project_hooks.py", "disable", "--project", str(repo))
     result = git(repo, "config", "--local", "--get", "core.hooksPath", check=False)
     assert result.returncode != 0
@@ -287,10 +320,13 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     assert "You alone make the initial and final classification" in pm["developer_instructions"]
     assert "notify PM immediately" in engineer["developer_instructions"]
     assert "TDD DQA, then SDD DQA" in engineer["developer_instructions"]
+    assert "johnny_ecc_rules.py" in engineer["developer_instructions"]
     assert "per-ticket" in dqa["description"]
     assert "backward-compatibility testing" in dqa["developer_instructions"]
     assert "only after TDD DQA has" in sdd["developer_instructions"]
+    assert "johnny_ecc_rules.py" in sdd["developer_instructions"]
     assert "do\nnot unlock SDD" in tdd["developer_instructions"]
+    assert "johnny_ecc_rules.py" in tdd["developer_instructions"]
     assert sdd["sandbox_mode"] == "read-only"
     assert tdd["sandbox_mode"] == "read-only"
     assert security["sandbox_mode"] == "read-only"

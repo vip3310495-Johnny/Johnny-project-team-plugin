@@ -152,6 +152,11 @@ def enable(project_arg: Path) -> None:
     )
     config["dqa_escalation"].setdefault("count_scope", "milestone-and-dqa-role")
     config["dqa_escalation"].setdefault("action", "freeze-and-escalate-to-ceo")
+    config.setdefault("ecc_rules", {})
+    config["ecc_rules"]["enabled"] = True
+    config["ecc_rules"]["selector"] = "johnny_ecc_rules.py"
+    config["ecc_rules"]["common_always"] = True
+    config["ecc_rules"]["require_every_selected_file"] = True
     atomic_json(config_path, config)
 
     atomic_json(

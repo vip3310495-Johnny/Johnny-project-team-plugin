@@ -59,6 +59,16 @@ dispatcher，再允許執行。
 
 Plugin 不會覆寫既有的 `AGENTS.md`、`.gitignore` 或自訂 Git hooks。
 
+啟用後可確認 ECC rule selector：
+
+```bash
+python <plugin-root>/skills/johnny-project-team/scripts/johnny_ecc_rules.py \
+  --project <project-path> --format json
+```
+
+輸出應包含 `detected_rulesets` 與 `rule_files`。所有適用規則均直接由
+Plugin 的 `references/rules/` 讀取，不會寫入或覆蓋目標專案的規則檔案。
+
 ## 解除專案 Gate
 
 ```bash
@@ -75,4 +85,6 @@ Disable 只還原該 Repository 先前的 hooks path，保留 `.johnny` 稽核�
 - Git commit 被阻擋：先執行 `status`，確認 Phase、branch、DQA evidence 與
   staged tree 是否一致。
 - Phase 3 無法開始：Phase 2→3 必須選擇 `SUPERVISED` 或 `AUTONOMOUS`。
+- 規則未載入：確認已在新 Codex task 中執行，並檢查 selector 的
+  `active_paths`、`detected_rulesets` 與 `rule_files`。
 - 同一 DQA 第五次退件：必須由 CEO resolution 指令解除 Milestone freeze。

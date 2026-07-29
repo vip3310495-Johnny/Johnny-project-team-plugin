@@ -28,11 +28,35 @@ Skills 與 TOML Agent profiles。
 - 每個 Milestone 依序通過 TDD DQA 與 SDD DQA。
 - DQA 證據綁定 Git `subject_tree`、`commit_tree` 與 review cycle。
 - Repository-local Git hooks，不修改全域 Git 設定。
+- 完整封裝 122 份 ECC rule 文件，涵蓋 22 個 common、語言與框架 ruleset。
+- 依目前產品路徑與專案技術棧，自動路由所有適用的 ECC rules；Engineer、
+  TDD DQA、SDD DQA 與 TE 使用同一份選擇結果。
 - Claude DQA、Security DQA 與 Log Agent 均為選用、手動啟動。
 - Phase 3 支援：
   - `SUPERVISED`：CEO 逐 Milestone 核准。
   - `AUTONOMOUS`：Phase 2 一次委派，DQA 全數 PASS 後自動成立 Milestone approval。
 - 同一 Milestone、同一 DQA 角色前四次 FAIL 退回工程師修正；第五次凍結並提交 CEO。
+
+## ECC rules 自動載入
+
+`johnny_ecc_rules.py` 先辨識 Repository 技術棧，再套用每份 ECC rule
+Markdown 的 `paths:` frontmatter。`common/` 永遠載入；語言與框架規則只在
+符合目前產品路徑時載入，且較具體的規則優先於 common 規則。
+
+目前支援：
+
+`common`、`angular`、`arkts`、`cpp`、`csharp`、`dart`、`fsharp`、
+`golang`、`java`、`kotlin`、`nuxt`、`perl`、`php`、`python`、
+`react`、`react-native`、`ruby`、`rust`、`swift`、`typescript`、
+`vue`、`web`。
+
+React Native 專案會排除假設 DOM 存在的 Web／React rules。實際選擇可用
+以下唯讀指令檢查：
+
+```powershell
+python <plugin-root>\skills\johnny-project-team\scripts\johnny_ecc_rules.py `
+  --project <project-path> --paths src\feature.tsx --format paths
+```
 
 ## 工作流摘要
 
@@ -124,6 +148,9 @@ codex/
         ├── .codex-plugin/plugin.json
         ├── hooks/
         └── skills/
+            └── johnny-project-team/
+                ├── scripts/johnny_ecc_rules.py
+                └── references/rules/
 ```
 
 ## 授權

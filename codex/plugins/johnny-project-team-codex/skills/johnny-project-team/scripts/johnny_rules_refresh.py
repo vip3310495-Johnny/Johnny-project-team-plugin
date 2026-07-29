@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from johnny_common import atomic_json, git_root, read_json
+from johnny_ecc_rules import select_rules
 
 
 def main() -> int:
@@ -23,6 +24,7 @@ def main() -> int:
     if missing:
         parser.error("missing required context files: " + ", ".join(missing))
     state = read_json(project / ".johnny" / "state.json", {})
+    ecc_rules = select_rules(project)
     atomic_json(
         project / ".agents" / "session-context.json",
         {
@@ -32,6 +34,7 @@ def main() -> int:
             "phase": state.get("phase"),
             "required": required,
             "routes": manifest.get("routes", {}),
+            "ecc_rules": ecc_rules,
         },
     )
     print("Johnny session context refreshed and validated")

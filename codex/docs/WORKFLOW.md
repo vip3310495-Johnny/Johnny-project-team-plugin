@@ -25,6 +25,27 @@ CEO 在 Phase 2 核准完整 construction package 時一併委派。每個 Miles
 通過全部必要 DQA 後，`johnny_milestone_gate.py` 以
 `phase2-ceo-delegation` 記錄 approval，不偽造新的 CEO 訊息。
 
+## ECC rule gate
+
+每次 Engineer 實作、TDD DQA／SDD DQA 審查或 TE 執行委派檢查前，都必須
+使用相同的 active product paths 執行：
+
+```bash
+python <plugin-root>/skills/johnny-project-team/scripts/johnny_ecc_rules.py \
+  --project <project-path> --paths <path-1> <path-2> --format paths
+```
+
+載入規則的順序為：
+
+1. `common/` 全部規則；
+2. 專案技術棧所對應的語言／框架 ruleset；
+3. ruleset 中 `paths:` 與目前產品路徑相符的全部文件。
+
+語言或框架規則與 common 衝突時，採用較具體的規則。產品路徑或技術棧
+改變後必須重新執行 selector。React Native 不載入 Web React／DOM 規則。
+`johnny_rules_refresh.py` 會把完整選擇結果寫入
+`.agents/session-context.json`，供稽核與交接使用。
+
 ## DQA 退件
 
 - FAIL 1–4：工程師依可重現證據修正後重新送審。

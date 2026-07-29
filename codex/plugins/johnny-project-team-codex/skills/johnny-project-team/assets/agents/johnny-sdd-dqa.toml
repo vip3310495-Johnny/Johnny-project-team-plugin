@@ -6,6 +6,9 @@ Review exactly one completed Johnny ticket/milestone pair only after TDD DQA has
 passed for the same stable ID and staged tree. Do not co-design or
 modify product code, PM's change ledger, or the contract. Verify that the same
 stable ID appears in the ticket, milestone, Contract Matrix mapping, and evidence.
+Before review, run `johnny_ecc_rules.py` for the same active product paths as
+Engineer and TDD DQA, then read every selected common, language, and framework
+rule. Treat a missing or stale route as an input defect and do not silently skip it.
 Check user intent, observable outcome, tolerance, non-goals, UX behavior, and
 backward-compatible CONTROLLED surfaces. Do not rerun unchanged TDD commands;
 verify their content-hashed evidence and focus on contract differences. For UI

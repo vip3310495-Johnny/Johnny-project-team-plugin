@@ -7,8 +7,8 @@ because an older filename or document called it one.
 
 | Script | Event | Application and limits |
 |---|---|---|
-| `hooks/johnny_session_context.py` | `SessionStart` | Read enabled state, Phase, context manifest, and project rules; return concise developer context. Do not write files or infer missing approvals. |
-| `hooks/johnny_subagent_context.py` | `SubagentStart` | Route a subagent to its role and Task Context Pack. Do not copy full project history or advance state. |
+| `hooks/johnny_session_context.py` | `SessionStart` | Read enabled state, Phase, context manifest, project rules, and applicable ECC rule routes; return concise developer context. Do not write files or infer missing approvals. |
+| `hooks/johnny_subagent_context.py` | `SubagentStart` | Route a subagent to its role, Task Context Pack, and the same applicable ECC rule files. Do not copy full project history or advance state. |
 | `hooks/johnny_tool_guard.py` | `PreToolUse` | Deny direct edits and Git commit/push on protected branches in Phase 3+. Keep the check fast and read-only. |
 
 ## Repository Git gates
@@ -26,7 +26,7 @@ because an older filename or document called it one.
 | `scripts/johnny_dqa_record.py` | Use `verdict` as the only TDD, SDD, or Claude verdict entry, `reopen` for explicit rejection cycles, and `resolve-escalation` after the fifth same-role FAIL on one Milestone. Require evidence and append every transition to `.johnny/dqa-history.jsonl`. |
 | `scripts/johnny_milestone_gate.py` | After the DQA-approved tree is committed, record one tree-bound Milestone approval. Require `--approval` under SUPERVISED; under AUTONOMOUS use the Phase 2 CEO delegation and never fabricate a fresh CEO message. |
 | `scripts/claude_dqa.py` | Manually run the real Claude CLI after TDD and SDD PASS. Save raw evidence and submit the result through `johnny_dqa_record.py`; never run from a hook. |
-| `scripts/johnny_rules_refresh.py` | Explicitly validate context routes and write `.agents/session-context.json`. Use after changing rules, Phase routing, or the context manifest. |
+| `scripts/johnny_rules_refresh.py` | Explicitly validate context routes, run the ECC selector, and write `.agents/session-context.json` with exact applicable rule files. Use after changing rules, Phase routing, technology, active product paths, or the context manifest. |
 | `scripts/johnny_lesson_record.py` | Atomically validate and store one structured lesson plus append-only history. Use instead of separated verify-then-write flows. |
 | `scripts/log_aggregator.py` | Explicitly append a reviewed Log Agent artifact to `Logs/Master_Log.md`. Never treat a timestamp as proof of workflow completion. |
 | `scripts/run_log_agent.py` | Explicitly run the bounded Log Agent pipeline described in `references/log-agent.md`; never attach it to lifecycle or Git hooks. |
@@ -35,6 +35,7 @@ because an older filename or document called it one.
 
 | Script | Application |
 |---|---|
+| `scripts/johnny_ecc_rules.py` | Detect the repository technology stack, keep `common` mandatory, apply each ECC file's `paths:` frontmatter to active product paths, and print exact rule routes as JSON, paths, or hook context. Run before Engineer implementation and every code DQA review; it is read-only and does not approve code. |
 | `scripts/dqa_test_limit.py` | Count Markdown checklist items using Phase limits from `.johnny/config.json`; failure is a planning signal, not a DQA verdict. |
 | `scripts/pm_context_compressor.py` | Check a Context Pack or Digest size before handoff. It does not summarize content or approve correctness. |
 | `scripts/te_dispatch_plan.py` | Calculate bounded TE capacity for a parent DQA. It does not spawn agents or write state. |

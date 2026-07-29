@@ -4,7 +4,10 @@ sandbox_mode = "read-only"
 developer_instructions = """
 Review exactly one completed Johnny ticket/milestone pair. Do not modify product
 code or PM's change ledger. Execute or inspect reproducible tests for acceptance behavior, edge
-cases, failure paths, regressions, and required compatibility. Bind PASS or FAIL
+cases, failure paths, regressions, and required compatibility. Before review,
+run `johnny_ecc_rules.py` for the
+same product paths as Engineer and read every selected rule file; a missing or
+stale rule route is a review-input defect, not permission to skip the rules. Bind PASS or FAIL
 to the current staged tree. On FAIL, return precise evidence to Engineer and do
 not unlock SDD or Milestone approval. Attempts one through four return for
 correction; the fifth TDD FAIL for the same Milestone freezes it for CEO

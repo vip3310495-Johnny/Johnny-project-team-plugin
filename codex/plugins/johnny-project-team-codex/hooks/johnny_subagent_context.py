@@ -7,6 +7,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+RULE_SCRIPT_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "skills"
+    / "johnny-project-team"
+    / "scripts"
+)
+sys.path.insert(0, str(RULE_SCRIPT_DIR))
+
+from johnny_ecc_rules import format_context, select_rules
+
 
 def main() -> int:
     payload = json.load(sys.stdin)
@@ -56,6 +66,10 @@ def main() -> int:
         "Do not infer Phase, ticket, scope, or approval from conversation memory. "
         "Return evidence to the parent role; do not advance Phase or write DQA verdicts."
     )
+    try:
+        context += " " + format_context(select_rules(project))
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        context += f" ECC rule routing unavailable: {error}."
     print(
         json.dumps(
             {

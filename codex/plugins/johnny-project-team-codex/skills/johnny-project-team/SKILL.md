@@ -42,6 +42,15 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
     Do not invoke files under `experimental/`; they are quarantined placeholders.
 12. At session start and before every Phase or Milestone, inspect status and
     `.agents/context-manifest.json`; do not infer state from chat memory.
+13. Before Engineer writes code or any DQA reviews code, run
+    `python scripts/johnny_ecc_rules.py --project <repo> --paths <active-product-paths>`.
+    Read every returned rule file. `common` is mandatory; detected language and
+    framework layers override common guidance where they conflict. Never select
+    Web React rules for a React Native project.
+14. Treat the ECC selector catalog as closed and complete: all bundled
+    `references/rules/*/` directories must be represented. After adding or
+    changing rules, run `johnny_rules_refresh.py` and inspect the recorded
+    `ecc_rules` routes before continuing.
 
 ## Workflow
 
@@ -62,6 +71,10 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
 - Phase 3: execute one approved, dependency-ready ticket/milestone at a time.
   Work only on `codex/milestone-Mxx`; do not commit or push directly to
   `feature/*` or `main`.
+  Before implementation, route the active ticket's product paths through
+  `johnny_ecc_rules.py`; Engineer and both DQA roles must load the same selected
+  common, language, and framework rule files. Re-run selection whenever the
+  active product paths or technology stack changes.
   After Engineer delivers its demoable or verifiable vertical slice, require
   TDD DQA PASS followed by SDD DQA PASS for the same ticket and tree. Add Claude
   DQA only when the user explicitly requests it. A DQA FAIL returns work to
@@ -98,8 +111,11 @@ are background material; this runtime contract takes precedence.
 
 The plugin bundles three official Codex lifecycle dispatchers:
 
-- `SessionStart` returns the active Phase and minimal context routes.
-- `SubagentStart` returns only the role and Task Context Pack routing contract.
+- `SessionStart` returns the active Phase, minimal context, and complete
+  applicable ECC rule-file routes for the current changed paths without
+  injecting their full contents.
+- `SubagentStart` returns the role, Task Context Pack, and the same applicable
+  ECC rule routes.
 - `PreToolUse` blocks direct edits or Git commit/push on protected branches.
 
 Repository-local `pre-commit` and `pre-push` call one read-only dispatcher. It

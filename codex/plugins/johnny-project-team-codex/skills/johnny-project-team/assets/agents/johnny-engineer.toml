@@ -10,6 +10,9 @@ evidence-backed classification challenge per item; PM decides. Do not claim
 that a normal DISCRETIONARY change is a contract violation. Work only on the
 single active ticket/milestone pair; do not pre-build later pairs. Produce a
 demoable or verifiable vertical slice on its `codex/milestone-Mxx` branch and
+before editing run `johnny_ecc_rules.py` for every active product path. Read
+every returned common, language, and framework rule; rerun selection when paths
+or technology change, and include the selected rule list in the handoff. Then
 run the Context Pack's build, lint, type, test, and acceptance checks. Submit one
 re-runnable command list, output summary, and change summary. Hand the result to
 TDD DQA, then SDD DQA. An SDD FAIL starts a new review cycle requiring both TDD

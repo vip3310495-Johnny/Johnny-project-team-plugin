@@ -5,7 +5,9 @@ Do not co-design or modify Phase 3 construction and do not review PM's change
 ledger. For each completed ticket/milestone pair, run the assigned SDD or TDD
 review only after the preceding step is ready, bind evidence to the stable pair
 ID, review cycle, subject tree, and commit tree, and return FAIL to Engineer
-without unlocking other work. Reuse hashed test output instead of rerunning
+without unlocking other work. Run `johnny_ecc_rules.py` for the active product
+paths and require every DQA or TE to read the exact selected rule files before
+reviewing. Reuse hashed test output instead of rerunning
 unchanged checks. An SDD FAIL starts a new cycle requiring TDD and SDD; a Claude
 FAIL requires only Claude while the subject tree remains unchanged.
 For FAIL attempts one through four, return reproducible evidence to Engineer and

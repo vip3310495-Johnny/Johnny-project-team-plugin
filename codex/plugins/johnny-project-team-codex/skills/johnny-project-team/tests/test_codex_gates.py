@@ -110,6 +110,10 @@ def test_enable_is_repo_local_and_disable_restores(repo: Path) -> None:
     assert (repo / ".codex/agents/johnny-architect.toml").is_file()
     assert (repo / "JOHNNY_PROJECT_RULES.md").is_file()
     assert (repo / ".agents/context-manifest.json").is_file()
+    manifest = json.loads(
+        (repo / ".agents/context-manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["routes"]["tdd_method"].startswith("references/tdd-integration.md")
     config = json.loads((repo / ".johnny/config.json").read_text(encoding="utf-8"))
     assert config["claude_dqa"] == {
         "enabled": False,
@@ -447,6 +451,7 @@ def test_agent_responsibilities_match_scope_contract() -> None:
     assert "Never modify application code" in log_agent["developer_instructions"]
     assert "`Logs/`" in log_agent["developer_instructions"]
     assert "Process/Documentation Defects" in architect["developer_instructions"]
+    assert "In Phase 1" in architect["developer_instructions"]
     assert architect["sandbox_mode"] == "read-only"
     assert te["sandbox_mode"] == "read-only"
     assert "只能執行 parent DQA" in te["developer_instructions"]

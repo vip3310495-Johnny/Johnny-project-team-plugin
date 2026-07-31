@@ -10,6 +10,7 @@
     "phase": "active Phase reference under the johnny-project-team skill",
     "role": "matching .codex/agents/johnny-*.toml profile",
     "ticket": "active Task Context Pack",
+    "tdd_method": "references/tdd-integration.md; Engineer test-first vertical-slice method and cycle evidence template",
     "technology": "exact ECC files returned by scripts/johnny_ecc_rules.py for active product paths"
   },
   "ecc_rules": {

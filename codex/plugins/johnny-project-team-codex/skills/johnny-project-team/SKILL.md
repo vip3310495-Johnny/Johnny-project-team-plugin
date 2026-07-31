@@ -64,6 +64,10 @@ collaboration primitives. Treat the bundled `SessionStart`, `SubagentStart`, and
     與 evidence 留在相對應流程目錄，不屬於產品 commit。TE 維持唯讀且只能
     執行 DQA 提供的工具。可重用的回歸檢查必須交給 Engineer 納入
     `src/tests/`。
+17. Engineer 在撰寫產品程式前必須讀取 `references/tdd-integration.md`：以
+    一個公開、可觀察行為為單位進行 Red → Green → Refactor，並使用獨立 oracle。
+    此為 Engineer 的內部開發方法；TDD DQA 仍是獨立的 post-build gate，不得
+    共同設計或指定內部實作。
 
 ## Workflow
 

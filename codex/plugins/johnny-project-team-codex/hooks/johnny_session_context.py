@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -16,6 +15,7 @@ RULE_SCRIPT_DIR = (
 sys.path.insert(0, str(RULE_SCRIPT_DIR))
 
 from johnny_ecc_rules import format_context, load_or_select_rules
+from johnny_context_resolution import resolve_project
 
 
 def read_json(path: Path) -> dict:
@@ -26,21 +26,23 @@ def read_json(path: Path) -> dict:
         return {}
 
 
-def git_root(cwd: Path) -> Path | None:
-    result = subprocess.run(
-        ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return Path(result.stdout.strip()).resolve() if result.returncode == 0 else None
-
-
 def main() -> int:
     payload = json.load(sys.stdin)
-    project = git_root(Path(payload.get("cwd", ".")))
+    resolution = resolve_project(Path(payload.get("cwd", ".")))
+    project = resolution.project
     if not project:
+        if resolution.diagnostic:
+            print(
+                json.dumps(
+                    {
+                        "hookSpecificOutput": {
+                            "hookEventName": "SessionStart",
+                            "additionalContext": resolution.diagnostic,
+                        }
+                    },
+                    ensure_ascii=False,
+                )
+            )
         return 0
     enabled = read_json(project / ".johnny" / "enabled.json")
     if enabled.get("enabled") is not True or enabled.get("scope") != str(project):
@@ -75,7 +77,7 @@ def main() -> int:
         context += rules.read_text(encoding="utf-8")[:4000]
     try:
         context += " " + format_context(load_or_select_rules(project))
-    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+    except (OSError, RuntimeError) as error:
         context += f" ECC rule routing unavailable: {error}."
     if missing:
         context += " Missing required context files: " + ", ".join(missing)

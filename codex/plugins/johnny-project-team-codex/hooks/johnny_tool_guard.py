@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from johnny_context_resolution import resolve_project
+
 
 def deny(reason: str) -> int:
     print(
@@ -38,10 +40,9 @@ def git(project: Path, *args: str) -> str:
 
 def main() -> int:
     payload = json.load(sys.stdin)
-    project_text = git(Path(payload.get("cwd", ".")), "rev-parse", "--show-toplevel")
-    if not project_text:
+    project = resolve_project(Path(payload.get("cwd", "."))).project
+    if not project:
         return 0
-    project = Path(project_text).resolve()
     try:
         enabled = json.loads(
             (project / ".johnny" / "enabled.json").read_text(encoding="utf-8")

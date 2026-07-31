@@ -39,6 +39,14 @@ working tree 與 merge conflict。`--push` 只透過此受控命令略過一般
 protected-branch pre-push，並把 merge／push 結果寫入 `.johnny/merge-status.json` 及
 append-only merge history。
 
+### Engineer TDD loop
+
+每個 vertical slice 由一連串「一個可觀察行為」的 Red → Green → Refactor cycle 組成。
+Engineer 先以公開介面寫一個會失敗的永久測試，預期值必須來自 Ticket、PRD、Contract
+Matrix 或已驗證範例；以最小產品程式碼讓它通過，僅在綠燈後重構。不得先批次寫完測試。
+每一輪使用 `assets/templates/tdd-cycle-evidence.md` 保存 RED／GREEN／REFACTOR 證據。
+TDD DQA 獨立檢查結果，不共同設計 Engineer 的測試或實作。
+
 ## DQA FAIL
 
 - 第 1～4 次：返回 Engineer 修正，AUTONOMOUS 流程仍繼續。

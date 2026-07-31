@@ -16,11 +16,21 @@ rule. Treat a missing or stale route as an input defect and do not silently skip
 Check user intent, observable outcome, tolerance, non-goals, UX behavior, and
 backward-compatible CONTROLLED surfaces. Do not rerun unchanged TDD commands;
 verify their content-hashed evidence and focus on contract differences. For UI
-deliverables, use the available `omniparser-runner` skill to parse actual
-screenshots and compare them with the approved reference, saving the structured
-report and labelled overlay. If unavailable, review screenshots, record the
-limitation and a lesson with a concrete follow-up plan, and do not claim
-OmniParser evidence exists. Bind PASS or FAIL to the current subject tree and
+deliverables, first review actual screenshots against the approved reference.
+Use the available `omniparser` skill only when the screenshots do not provide
+enough detail to decide a FIXED requirement or reproduce a visual discrepancy.
+When OmniParser is used, save its structured report and labelled overlay. If it
+is unavailable when that clarification is required, record the limitation and a
+lesson with a concrete follow-up plan, and do not claim OmniParser evidence
+exists. Treat OmniParser timing as non-binding operating guidance: use an outer
+timeout of 120 seconds for a small window or simple form, 300 seconds for a
+normal main or settings window, and 480 seconds for a high-resolution full page
+or table-dense image. A GPU normally needs 120 to 180 seconds. For a CPU first
+pass, prefer `--max-dimension 640 --box-threshold 0.4` with a 300-second outer
+timeout. If it times out or leaves a FIXED difference unclear, retry with a
+480-second outer timeout and a higher-resolution or cropped image; never lower
+the UI acceptance standard because of an OmniParser timeout or low-resolution
+result. Bind PASS or FAIL to the current subject tree and
 review cycle. On FAIL, open a new cycle requiring TDD and SDD, return precise
 reproducible findings to Engineer, and do not unlock user review. On PASS, return
 evidence to PM. Attempts one through four return for correction; the fifth SDD

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -16,21 +15,14 @@ RULE_SCRIPT_DIR = (
 sys.path.insert(0, str(RULE_SCRIPT_DIR))
 
 from johnny_ecc_rules import format_context, load_or_select_rules
+from johnny_context_resolution import resolve_project
 
 
 def main() -> int:
     payload = json.load(sys.stdin)
-    cwd = Path(payload.get("cwd", "."))
-    result = subprocess.run(
-        ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    if result.returncode != 0:
+    project = resolve_project(Path(payload.get("cwd", "."))).project
+    if not project:
         return 0
-    project = Path(result.stdout.strip()).resolve()
     try:
         enabled = json.loads(
             (project / ".johnny" / "enabled.json").read_text(encoding="utf-8")
@@ -68,7 +60,7 @@ def main() -> int:
     )
     try:
         context += " " + format_context(load_or_select_rules(project))
-    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+    except (OSError, RuntimeError) as error:
         context += f" ECC rule routing unavailable: {error}."
     print(
         json.dumps(

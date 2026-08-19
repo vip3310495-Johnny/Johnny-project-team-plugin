@@ -19,5 +19,9 @@
 7. PM 文件只存於 `PM/` 的對應子目錄：`Planning/`、`PRD/`、`Flows/`、`DataFlows/`、
    `Contracts/`、`Context/`、`Milestones/`、`Changes/`、`Approvals/` 或 `tests/`；不得在
    專案根目錄或其他角色目錄建立 PM 文件。
+8. 任何 hook、script 或 Agent 若以 stdout／stderr 傳遞 JSON 或其他機器可讀輸出，必須明確
+   使用 UTF-8，且不得依賴 Windows 的系統預設編碼（例如 CP950）。Python 輸出 JSON 時，
+   優先使用 `json.dumps(..., ensure_ascii=True)`；若需保留原始 Unicode，必須明確設定 stdout
+   與呼叫端 subprocess 的 UTF-8 encoding，並在 Windows 繁體中文環境加入回歸測試。
 
 <!-- johnny-project-contract-v4:end -->

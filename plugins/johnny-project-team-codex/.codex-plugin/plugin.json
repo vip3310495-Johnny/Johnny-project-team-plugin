@@ -1,6 +1,6 @@
 {
   "name": "johnny-project-team-codex",
-  "version": "2.3.0-codex.1+codex.20260810070612",
+  "version": "2.3.0-codex.1+codex.20260819165318",
   "description": "Codex-compatible Johnny Project Team Phase 0-5 workflow with Phase 4 architecture deepening, canonical src-only delivery, controlled vertical-slice merges, TDD/SDD DQA, and optional Claude DQA.",
   "author": {
     "name": "Johnny Project Team contributors"

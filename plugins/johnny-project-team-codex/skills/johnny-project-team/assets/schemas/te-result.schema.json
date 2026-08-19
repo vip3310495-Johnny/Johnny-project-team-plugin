@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://johnny-project-team.local/schemas/te-result.schema.json",
+  "title": "Johnny TE 執行結果",
+  "description": "TE 回傳給上層 DQA 的唯讀測試執行證據契約。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "assignment_id",
+    "commands_run",
+    "exit_codes",
+    "evidence",
+    "findings",
+    "error_summary"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "BLOCKED"]
+    },
+    "assignment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commands_run": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "exit_codes": {
+      "type": "array",
+      "items": { "type": "integer" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "error_summary": {
+      "type": ["string", "null"]
+    }
+  }
+}

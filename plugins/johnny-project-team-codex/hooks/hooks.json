@@ -1,0 +1,48 @@
+{
+  "description": "Johnny project context and project-scoped tool guard.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/johnny_session_context.py\"",
+            "commandWindows": "\"%PLUGIN_ROOT%\\hooks\\johnny_python_runner.cmd\" \"%PLUGIN_ROOT%\\hooks\\johnny_session_context.py\"",
+            "timeout": 5,
+            "statusMessage": "Loading Johnny project context",
+            "additionalContextLimit": 6000
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/johnny_subagent_context.py\"",
+            "commandWindows": "\"%PLUGIN_ROOT%\\hooks\\johnny_python_runner.cmd\" \"%PLUGIN_ROOT%\\hooks\\johnny_subagent_context.py\"",
+            "timeout": 5,
+            "statusMessage": "Loading Johnny task context",
+            "additionalContextLimit": 5000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/johnny_tool_guard.py\"",
+            "commandWindows": "\"%PLUGIN_ROOT%\\hooks\\johnny_python_runner.cmd\" \"%PLUGIN_ROOT%\\hooks\\johnny_tool_guard.py\"",
+            "timeout": 3,
+            "statusMessage": "Checking Johnny branch policy"
+          }
+        ]
+      }
+    ]
+  }
+}

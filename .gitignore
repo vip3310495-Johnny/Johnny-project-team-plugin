@@ -1,3 +1,5 @@
 **/__pycache__/
 **/.pytest_cache/
+.pytest-*-temp*/
 *.py[cod]
+**/tests/logs/*.log

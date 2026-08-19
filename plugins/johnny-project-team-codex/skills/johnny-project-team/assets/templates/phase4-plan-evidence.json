@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "to_phase": 4,
+  "architecture_review": ["Architect/Phase4_Architecture_Review.md"],
+  "phase4_prd": ["PM/PRD/Phase4_PRD.md"],
+  "scope_contract_matrix": ["<preserved Phase 3 contract matrix path>"],
+  "milestones": ["P4-M01"],
+  "regression_baseline": ["<command and passing result path>" ]
+}

@@ -1,8 +1,7 @@
-# Repository scope
+# Codex Edition scope
 
-This repository contains two independent editions:
-
-- `antigravity/` is the Google Antigravity edition.
-- `codex/` is the OpenAI Codex edition.
-
-Make changes only within the requested edition. Do not share, move, or invoke manifests, hooks, agent profiles, or skills across editions without an explicit compatibility task. Read the `AGENTS.md` and `README.md` in the selected edition before changing it.
+This repository maintains only the OpenAI Codex edition. The plugin lives in
+`plugins/johnny-project-team-codex/`; keep its manifests, agent profiles,
+skills, hooks, and plugin documentation there. Repository-level marketplace
+metadata and release documentation may live beside `plugins/` when they are
+needed to install or describe that plugin.

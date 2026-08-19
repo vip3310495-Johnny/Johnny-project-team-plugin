@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "from_phase": 3,
+  "to_phase": 4,
+  "completed_milestones": ["M01"],
+  "regression_evidence": ["TDD_DQA/phase3-regression.md"],
+  "commit_tree": "<git rev-parse HEAD^{tree}>"
+}

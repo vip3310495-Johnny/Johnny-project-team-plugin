@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "to_phase": 3,
+  "scope_contract_matrix": ["PM/Contracts/Phase_Contract_Matrix.md"],
+  "milestones": ["M01"],
+  "task_context_packs": ["PM/Context/M01.md"],
+  "model_matrix": [
+    {"role": "PM", "model": "<available model>", "availability": "AVAILABLE", "approved_by": "<CEO>"},
+    {"role": "Architect", "model": "<available model>", "availability": "AVAILABLE", "approved_by": "<CEO>"},
+    {"role": "Engineer", "model": "<available model>", "availability": "AVAILABLE", "approved_by": "<CEO>"},
+    {"role": "TDD DQA", "model": "<available model>", "availability": "AVAILABLE", "approved_by": "<CEO>"},
+    {"role": "SDD DQA", "model": "<available model>", "availability": "AVAILABLE", "approved_by": "<CEO>"}
+  ]
+}

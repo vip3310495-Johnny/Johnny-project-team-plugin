@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "rules_version": "2026-08-19-dispatch-profile-v6",
+  "required": [
+    "JOHNNY_PROJECT_RULES.md",
+    ".johnny/state.json",
+    ".johnny/config.json"
+  ],
+  "routes": {
+    "phase": "active Phase reference under the johnny-project-team skill",
+    "role": "matching .codex/agents/johnny-*.toml profile",
+    "ticket": "active Task Context Pack",
+    "tdd_method": "references/tdd-integration.md; Engineer test-first vertical-slice method and cycle evidence template",
+    "engineer_handoff": "assets/templates/engineer-handoff.md; completed one-shot: assets/examples/engineer-handoff-example.md; Engineer writes the review-cycle report under Engineer/ and hands it to PM",
+    "milestone_prd": "assets/templates/milestone-prd.md; PM writes one ticket-scoped PRD with row-based Acceptance Criteria before dispatch",
+    "tdd_dqa_review": "references/tdd-dqa-review.md; environment: references/dqa-test-environment.md; report: assets/templates/tdd-dqa-review-report.md",
+    "sdd_dqa_review": "references/sdd-review.md; UI: references/sdd-ui-review.md; environment: references/dqa-test-environment.md; report: assets/templates/sdd-dqa-review-report.md",
+    "technology": "exact ECC files returned by scripts/johnny_ecc_rules.py for active product paths"
+  },
+  "ecc_rules": {
+    "selector": "scripts/johnny_ecc_rules.py",
+    "rules_root": "references/rules",
+    "common_always": true,
+    "require_every_selected_file": true,
+    "supported_rule_sets": [
+      "common",
+      "angular",
+      "arkts",
+      "cpp",
+      "csharp",
+      "dart",
+      "fsharp",
+      "golang",
+      "java",
+      "kotlin",
+      "nuxt",
+      "perl",
+      "php",
+      "python",
+      "react",
+      "react-native",
+      "ruby",
+      "rust",
+      "swift",
+      "typescript",
+      "vue",
+      "web"
+    ]
+  },
+  "product_layout": {
+    "delivery_root": "src/",
+    "permanent_tests": "src/tests/",
+    "phase3_commit_roots": [
+      "src/"
+    ],
+    "phase4_commit_roots": [
+      "src/"
+    ],
+    "dqa_tool_roots": {
+      "tdd": "TDD_DQA/tool/",
+      "sdd": "SDD_DQA/tool/",
+      "claude": "Claude DQA/tool/"
+    },
+    "te_write_access": false
+  },
+  "model_matrix": "PM/Planning/Model_Recommendation_Matrix.md",
+  "task_context_pack": "PM/Context/<ticket-id>.md",
+  "pm_document_root": "PM/",
+  "pm_document_directories": [
+    "Planning/",
+    "PRD/",
+    "Flows/",
+    "DataFlows/",
+    "Contracts/",
+    "Context/",
+    "Milestones/",
+    "Changes/",
+    "Approvals/",
+    "tests/"
+  ]
+}

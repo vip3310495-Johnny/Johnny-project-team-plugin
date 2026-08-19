@@ -1,0 +1,45 @@
+{
+  "name": "johnny-project-team-codex",
+  "version": "2.3.0-codex.1+codex.20260810070612",
+  "description": "Codex-compatible Johnny Project Team Phase 0-5 workflow with Phase 4 architecture deepening, canonical src-only delivery, controlled vertical-slice merges, TDD/SDD DQA, and optional Claude DQA.",
+  "author": {
+    "name": "Johnny Project Team contributors"
+  },
+  "homepage": "https://github.com/vip3310495-Johnny/Johnny-project-team-plugin",
+  "repository": "https://github.com/vip3310495-Johnny/Johnny-project-team-plugin",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "project-management",
+    "dqa",
+    "git-hooks",
+    "claude"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Johnny Project Team Codex",
+    "shortDescription": "Project phases, complete ECC rules, DQA, and local Git gates.",
+    "longDescription": "Runs the Johnny Project Team Phase 0-5 workflow in Codex. Phase 4 reviews Phase 3 architecture, requires a separately CEO-approved vertical-slice refactoring plan, preserves validated behavior, and produces a detailed As-Built brownfield baseline. Every ticket passes TDD DQA followed by SDD DQA. Claude DQA is optional and off by default.",
+    "developerName": "Johnny Project Team contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Project phase orchestration",
+      "Project-scoped Git gates",
+      "Optional manual Claude DQA",
+      "Optional Security DQA",
+      "Optional Log and Observability Agent",
+      "DQA-managed TE delegation",
+      "Three-level scope contracts",
+      "Canonical src-only product delivery",
+      "New-project Git initialization",
+      "Complete path-routed ECC coding rules",
+      "One-to-one ticket milestones",
+      "Per-ticket TDD then SDD DQA",
+      "Phase 4 architecture deepening and As-Built baseline"
+    ],
+    "defaultPrompt": [
+      "Use Johnny Project Team for this project.",
+      "Keep Claude DQA off unless I explicitly request an external cross-check."
+    ]
+  }
+}

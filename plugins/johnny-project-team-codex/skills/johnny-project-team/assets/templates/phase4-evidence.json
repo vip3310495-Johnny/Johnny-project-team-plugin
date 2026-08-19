@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "to_phase": 5,
+  "completed_milestones": ["P4-M01"],
+  "regression_evidence": ["<Phase 3 baseline result path>"],
+  "detailed_architecture_report": ["Architect/As_Built_Architecture.md"],
+  "known_limitations": ["None, or a concrete limitation and owner"],
+  "commit_tree": "<git rev-parse HEAD^{tree}>"
+}
